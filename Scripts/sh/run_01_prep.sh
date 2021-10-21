@@ -440,6 +440,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 						echo -e ${COL1}"◼︎ $(date)"${COL2}
 						echo -e ${COL1}"◼︎ gnomAD SNP database - sorting for contigs in reference"${COL2}
 						echo -e ${COL1}${END}${COL2}
+						LIST_OF_CONTIGS=${LIST_OF_CONTIGS// / -L }
 						${GATK} SelectVariants \
 							-V ${GNOMAD} \
 							-L ${LIST_OF_CONTIGS} \
