@@ -6,11 +6,11 @@
 
 Welcome to CNVRobot v3.5!
 
-## 1. Description
+## 1. Descriptionss
 CNVRobot is an integrated pipeline designed to detect rare germline and somatic copy-number variants (CNVs) and loss of heterozygosity (LOH) regions in the human genome using short-read DNA sequencing from any NGS platform, including targeted sequencing (TS), whole-exome sequencing (WES) and whole-genome sequencing (WGS). It integrates sequencing depth with SNP zygosity across the genome, incorporates advanced data denoising, segmentation and variant prioritization options, as well as detailed visualization for manual inspection of detected CNVs.
 
 ## 2. Download
-Code, databases and example data can be downloaded here: [CNVRobot_v3.5.zip](https://newcastle-my.sharepoint.com/:u:/g/personal/nam320_newcastle_ac_uk/EfFAXdexqfxCkR3-c4hmf5UBKTJiqLzxjtfFUxC-SjgpVw)
+Code, databases and example data can be downloaded here: [CNVRobot_v3.5.zip](https://newcastle-my.sharepoint.com/:u:/g/personal/nam320_newcastle_ac_uk/EXlBAvDupxpMqV9N7Imy89wBAyflxXbfyuMDLcpYiV74hQ?e=vTIRJZ)
 
 ## 3. Dependencies (License)
 - [GATK v4.2+](https://github.com/broadinstitute/gatk/releases) (Apache License 2.0)
