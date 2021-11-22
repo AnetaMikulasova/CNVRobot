@@ -372,7 +372,7 @@ message(paste0("   R ... ", date(), " - STAGE 4/4 - writing output"))
 
 #Write output
 #----------------------------------------------------------------------------------------------------------------------
-write_tsv(SEGMENTATION, path = paste0(OUTPUT), col_names = T)
+write_tsv(SEGMENTATION, paste0(OUTPUT), col_names = T)
   
 message(paste0("   R ... ", date(), " - FINISHED"))
 

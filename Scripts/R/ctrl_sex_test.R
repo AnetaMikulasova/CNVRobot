@@ -32,8 +32,8 @@ names(DATASET) = c("id", "sex_expected_from_metadata", "SRY_coverage", "CTRL_GEN
 correct = filter(DATASET, result == "yes")
 wrong = filter(DATASET, result == "no")
 
-write_tsv(correct, path = paste0(DIR, "results_correct.tsv"), col_names = T)
-if (nrow(wrong)==0) {write_tsv(wrong, path = paste0(DIR, "results_wrong.tsv"), col_names = F)}
-if (nrow(wrong)!=0) {write_tsv(wrong, path = paste0(DIR, "results_wrong.tsv"), col_names = T)}
+write_tsv(correct, paste0(DIR, "results_correct.tsv"), col_names = T)
+if (nrow(wrong)==0) {write_tsv(wrong, paste0(DIR, "results_wrong.tsv"), col_names = F)}
+if (nrow(wrong)!=0) {write_tsv(wrong, paste0(DIR, "results_wrong.tsv"), col_names = T)}
 
 

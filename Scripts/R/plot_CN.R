@@ -20,37 +20,39 @@ ASSEMBLY            = args[2] %>% as.character()
 CHROMSIZE           = args[3] %>% as.character()
 CENTROMERE          = args[4] %>% as.character()
 DGV                 = args[5] %>% as.character()
-# GNOMADSV            = args[6] %>% as.character()
 GET_MAPPABILITY_DTB = args[6] %>% as.character()
-GENES_DTB_PROCESSED = args[7] %>% as.character()
-PROJECT_ID          = args[8] %>% as.character()
-INDIR               = args[9] %>% as.character()
-GNOMAD_PATTERN      = args[10] %>% as.character()
-GROUP               = args[11] %>% as.character()
-SAMPLE1_ID          = args[12] %>% as.character()
-SAMPLE1_TYPE        = args[13] %>% as.character()
-SAMPLE1_SEX         = args[14] %>% as.character()
-SAMPLE2_ID          = args[15] %>% as.character()
-SAMPLE2_TYPE        = args[16] %>% as.character()
-SAMPLE2_SEX         = args[17] %>% as.character()
-SAMPLE3_ID          = args[18] %>% as.character()
-SAMPLE3_TYPE        = args[19] %>% as.character()
-SAMPLE3_SEX         = args[20] %>% as.character()
-PON_STYLE           = args[21] %>% as.character()
-OUTDIR              = args[22] %>% as.character()
-OUTDIR_IGV          = args[23] %>% as.character()
-GETSEGMENTCONDITION = args[24] %>% as.character()
-MINLOSS  = args[25] %>% as.numeric()
-MINGAIN  = args[26] %>% as.numeric()
-GET_CTRL_CN         = args[27] %>% as.character()
-PLOT_PROJECT_SOURCE = args[28] %>% as.character()
+GET_ENCODE_BLACKLIST = args[7] %>% as.character()
+GENES_DTB_PROCESSED = args[8] %>% as.character()
+PROJECT_ID          = args[9] %>% as.character()
+INDIR               = args[10] %>% as.character()
+GNOMAD_PATTERN      = args[11] %>% as.character()
+GROUP               = args[12] %>% as.character()
+SAMPLE1_ID          = args[13] %>% as.character()
+SAMPLE1_TYPE        = args[14] %>% as.character()
+SAMPLE1_SEX         = args[15] %>% as.character()
+SAMPLE2_ID          = args[16] %>% as.character()
+SAMPLE2_TYPE        = args[17] %>% as.character()
+SAMPLE2_SEX         = args[18] %>% as.character()
+SAMPLE3_ID          = args[19] %>% as.character()
+SAMPLE3_TYPE        = args[20] %>% as.character()
+SAMPLE3_SEX         = args[21] %>% as.character()
+CTRL_N              = args[22] %>% as.character()
+PON_STYLE           = args[23] %>% as.character()
+OUTDIR              = args[24] %>% as.character()
+OUTDIR_IGV          = args[25] %>% as.character()
+GETSEGMENTCONDITION = args[26] %>% as.character()
+MINLOSS  = args[27] %>% as.numeric()
+MINGAIN  = args[28] %>% as.numeric()
+GET_CTRL_CN         = args[29] %>% as.character()
+PLOT_PROJECT_SOURCE = args[30] %>% as.character()
   
 message(paste0("   R ... ", date(), " - STAGE 1/5 - loading and processing databases"))
 
 #Get ctrl CN file
 if(file.exists(GET_CTRL_CN)==T) {
   #get data
-  CTRL_CN = readRDS(GET_CTRL_CN)
+  CTRL_CN = readRDS(GET_CTRL_CN) %>%
+    mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG)))
   #exclude relative controls from dataset
   CTRL_CN_POS = select(CTRL_CN, c(1:3))
   CTRL_CN_DATA = select(CTRL_CN, matches("denoisedCR"))
@@ -136,7 +138,12 @@ remove(DTB_DGVDATA, DTB_DGVDATA_temp)
 # remove(DTB_GNOMADSV, DTB_GNOMADSV_temp)
 
 #load mappability dtb
-MAPPABILITY = readRDS(GET_MAPPABILITY_DTB)
+MAPPABILITY = readRDS(GET_MAPPABILITY_DTB) %>%
+  mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG)))
+
+#load ENCODE blacklist
+ENCODE_BLACKLIST = read.delim(paste0(GET_ENCODE_BLACKLIST), header=TRUE, stringsAsFactors = F) %>%
+  mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG)))
 
 #Get processed gene database
 DTB_GENES_DTB_PROCESSED  = read.delim(GENES_DTB_PROCESSED, header = TRUE, stringsAsFactors = F)
@@ -162,34 +169,22 @@ for (i in list(paste0(SAMPLE1_TYPE, "_", SAMPLE1_ID, "_", SAMPLE1_SEX), paste0(S
   # if(i == paste0(SAMPLE3_TYPE, "_", SAMPLE3_ID, "_", SAMPLE3_SEX)) {SEX_A = paste0("PoN-", SAMPLE3_SEX)}
   # SEX_B = PON
   
-  if(file.exists(paste0(INDIR, i, "_SEGMENTS_", PON, "_", GETSEGMENTCONDITION, "_segmentation.tsv"))) {
+  if(file.exists(paste0(INDIR, i, "_SEGMENTS_C-", CTRL_N, "_", PON, "_", GETSEGMENTCONDITION, "_segmentation.tsv"))) {
 
-    MODEL <- read.delim(paste0(INDIR, i, "_SEGMENTS_", PON, "_", GETSEGMENTCONDITION, "_segmentation.tsv"), stringsAsFactors = F) %>% mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG))) %>%
+    MODEL <- read.delim(paste0(INDIR, i, "_SEGMENTS_C-", CTRL_N, "_", PON, "_", GETSEGMENTCONDITION, "_segmentation.tsv"), stringsAsFactors = F) %>% mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG))) %>%
       # filter(FILTER == "PASS") %>%
       filter(TYPE == "NORMAL" | TYPE == "LOSS" | TYPE == "GAIN" | TYPE == "subLOSS" | TYPE == "subGAIN") %>%
       mutate(COLOR = "#000000") %>%
       mutate(COLOR = ifelse(TYPE == "LOSS", "#C02600", COLOR)) %>%
       mutate(COLOR = ifelse(TYPE == "GAIN", "#006200", COLOR))
-    
-    # #In many cases, MODEL_LOH is empty, therefore one helping line 'x' is created here
-    # # x = data.frame(GETSEGMENTCONDITION, "x", "x", "x", "x", "x", "chrZ", 1, 1, NA, NA, 1, 1, "x", "x", "x", "x",   NA, NA, NA, NA, NA, NA, NA, NA, "x")
-    # x = MODEL[1,] %>% mutate(CONTIG = "chrZ")
-    # MODEL_LOH <- read.delim(paste0(INDIR, i, "_SEGMENTS_", PON, "_", GETSEGMENTCONDITION, ".tsv"), stringsAsFactors = F)%>% mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG))) %>%
-    #   # filter(FILTER == "PASS") %>%
-    #   filter(TYPE == "HOM" | TYPE == "HET" | TYPE == "OTHER") %>%
-    #   mutate(COLOR = ifelse(TYPE == "HOM", "#B0C0E2", "#DBE3F1"))
-    # MODEL_LOH_COLUMNS = colnames(MODEL_LOH) %>% as.vector()
-    # names(x) = MODEL_LOH_COLUMNS
-    # MODEL_LOH = rbind(MODEL_LOH, x)
-    # names(MODEL_LOH) = MODEL_LOH_COLUMNS
 
-    MODEL_LOH <- read.delim(paste0(INDIR, i, "_SEGMENTS_", PON, "_", GETSEGMENTCONDITION, "_segmentation.tsv"), stringsAsFactors = F)%>% mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG))) %>%
+    MODEL_LOH <- read.delim(paste0(INDIR, i, "_SEGMENTS_C-", CTRL_N, "_", PON, "_", GETSEGMENTCONDITION, "_segmentation.tsv"), stringsAsFactors = F)%>% mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG))) %>%
       # filter(FILTER == "PASS") %>%
       filter(TYPE == "HOM" | TYPE == "HET" | TYPE == "OTHER") %>%
       mutate(COLOR = ifelse(TYPE == "HOM", "#B0C0E2", "#DBE3F1"))
     
     #bed file for IGV with abnormal segments
-    IGV_MODEL <- read.delim(paste0(INDIR, i, "_SEGMENTS_", PON, "_", GETSEGMENTCONDITION, "_segmentation.tsv"), stringsAsFactors = F) %>% #mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG))) %>%
+    IGV_MODEL <- read.delim(paste0(INDIR, i, "_SEGMENTS_C-", CTRL_N, "_", PON, "_", GETSEGMENTCONDITION, "_segmentation.tsv"), stringsAsFactors = F) %>% #mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG))) %>%
       # filter(FILTER == "PASS") %>%
       select(CONTIG, START, END, TYPE) %>%
       mutate(START = START-1) %>%
@@ -206,9 +201,9 @@ for (i in list(paste0(SAMPLE1_TYPE, "_", SAMPLE1_ID, "_", SAMPLE1_SEX), paste0(S
       mutate(COLOR = ifelse(TYPE == "subGAIN", "168,211,121", COLOR)) %>%
       arrange(CONTIG, START, END)
       
-    write_tsv(IGV_MODEL, path = paste0(OUTDIR_IGV, GROUP, "_", i, "_abnormal_segments.bed"), col_names = F)
+    write_tsv(IGV_MODEL, paste0(OUTDIR_IGV, GROUP, "_", i, "_abnormal_segments.bed"), col_names = F)
     
-    DENOIS  <-  read.delim(paste0(INDIR, i, "_denoisedCR_", PON, ".tsv"), comment.char = "@", stringsAsFactors = F) %>%
+    DENOIS  <-  read.delim(paste0(INDIR, i, "_denoisedCR_C-", CTRL_N, "_", PON, ".tsv"), comment.char = "@", stringsAsFactors = F) %>%
       mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG))) %>%
       mutate(COLOR = "#A6A6A6") %>%
       # mutate(COLOR = ifelse(LOG2_COPY_RATIO < -0.9, "#FF7100", COLOR)) %>%
@@ -224,11 +219,11 @@ for (i in list(paste0(SAMPLE1_TYPE, "_", SAMPLE1_ID, "_", SAMPLE1_SEX), paste0(S
     
           #re-color denois based on segments from segmentations
           MODELtemp = MODEL %>% select(CONTIG, START, END, TYPE)
-          write_tsv(MODELtemp, path = paste0(INDIR, "temp1"), col_names = F)
+          write_tsv(MODELtemp, paste0(INDIR, "temp1"), col_names = F)
           MODELtemp = paste0(INDIR, "temp1")
           
           DENOIStemp = DENOIS %>% select(CONTIG, START, END)
-          write_tsv(DENOIStemp, path = paste0(INDIR, "temp2"), col_names = F)
+          write_tsv(DENOIStemp, paste0(INDIR, "temp2"), col_names = F)
           DENOIStemp = paste0(INDIR, "temp2")
           
           #process segments to denois data by bedtools and remove temp files
@@ -256,17 +251,18 @@ for (i in list(paste0(SAMPLE1_TYPE, "_", SAMPLE1_ID, "_", SAMPLE1_SEX), paste0(S
     DENOIS_FILTERED = DENOIS %>% sample_frac(0.5) %>% arrange(CONTIG, START)
     
     #bedGraph file with denoised copy-number data
-    IGV_DENOIS  <-  read.delim(paste0(INDIR, i, "_denoisedCR_", PON, ".tsv"), comment.char = "@", stringsAsFactors = F) %>%
+    IGV_DENOIS  <-  read.delim(paste0(INDIR, i, "_denoisedCR_C-", CTRL_N, "_", PON, ".tsv"), comment.char = "@", stringsAsFactors = F) %>%
       mutate(L2R = ifelse(LOG2_COPY_RATIO < -2.25, -2.25, LOG2_COPY_RATIO)) %>%
       mutate(L2R = ifelse(LOG2_COPY_RATIO > 2.25, 2.25, L2R)) %>%
       select(CONTIG, START, END, L2R) %>%
       mutate(START = START-1) %>%
       arrange(CONTIG, START, END)
-    write_tsv(IGV_DENOIS, path = paste0(OUTDIR_IGV, GROUP, "_", i, "_CN"), col_names = F)
+    write_tsv(IGV_DENOIS, paste0(OUTDIR_IGV, GROUP, "_", i, "_CN"), col_names = F)
     
     # ALL    <-   readRDS(paste0(INDIR, i, "_allelicCounts", GNOMAD_PATTERN, "_", PON, ".rds")) %>%
     ALL    <-   readRDS(paste0(INDIR, i, "_allelicCounts", GNOMAD_PATTERN, ".rds")) %>%
       mutate(N = REF_COUNT + ALT_COUNT) %>%
+      filter(N > 2) %>%
       mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG)))
     ALL = ALL %>%
       mutate(TEST = sample(1:2, nrow(ALL), replace = T)) %>%
@@ -283,16 +279,17 @@ for (i in list(paste0(SAMPLE1_TYPE, "_", SAMPLE1_ID, "_", SAMPLE1_SEX), paste0(S
     
     #bedGraph file with denoised copy-number data
     # ALL_IGV <- readRDS(paste0(INDIR, i, "_allelicCounts", GNOMAD_PATTERN, "_", PON, ".rds"))
-    ALL_IGV <- readRDS(paste0(INDIR, i, "_allelicCounts", GNOMAD_PATTERN, ".rds"))
-    ALL_IGV = ALL_IGV %>%
+    ALL_IGV <- readRDS(paste0(INDIR, i, "_allelicCounts", GNOMAD_PATTERN, ".rds")) %>%
       mutate(N = REF_COUNT + ALT_COUNT) %>%
+      filter(N > 2)
+    ALL_IGV = ALL_IGV %>%
       mutate(TEST = sample(1:2, nrow(ALL_IGV), replace = T)) %>%
       mutate(MAF = ifelse(TEST == 1, ALT_COUNT/N, REF_COUNT/N)) %>%
       mutate(POSITION = POSITION-1) %>%
       mutate(POSITION2 = POSITION) %>%
       select(CONTIG, POSITION, POSITION2, MAF) %>%
       arrange(CONTIG, POSITION)
-    write_tsv(ALL_IGV, path = paste0(OUTDIR_IGV, GROUP, "_", i, "_SNP"), col_names = F)
+    write_tsv(ALL_IGV, paste0(OUTDIR_IGV, GROUP, "_", i, "_SNP"), col_names = F)
     
     #transform to GRanges
 
@@ -384,18 +381,19 @@ if(PON_STYLE == "matched_each") {
   PON3 = paste0("PoN-", SAMPLE3_SEX)
   }
 
+
 #Define style
-if(file.exists(paste0(INDIR, SAMPLE1_TYPE, "_", SAMPLE1_ID, "_", SAMPLE1_SEX, "_SEGMENTS_", PON1, "_", GETSEGMENTCONDITION, "_segmentation.tsv")) & 
-   file.exists(paste0(INDIR, SAMPLE2_TYPE, "_", SAMPLE2_ID, "_", SAMPLE2_SEX, "_SEGMENTS_", PON2, "_", GETSEGMENTCONDITION, "_segmentation.tsv")) &
-   file.exists(paste0(INDIR, SAMPLE3_TYPE, "_", SAMPLE3_ID, "_", SAMPLE3_SEX, "_SEGMENTS_", PON3, "_", GETSEGMENTCONDITION, "_segmentation.tsv"))) {PLOT_STYLE = "RUN_TRIO"}
+if(file.exists(paste0(INDIR, SAMPLE1_TYPE, "_", SAMPLE1_ID, "_", SAMPLE1_SEX, "_SEGMENTS_C-", CTRL_N, "_", PON1, "_", GETSEGMENTCONDITION, "_segmentation.tsv")) & 
+   file.exists(paste0(INDIR, SAMPLE2_TYPE, "_", SAMPLE2_ID, "_", SAMPLE2_SEX, "_SEGMENTS_C-", CTRL_N, "_", PON2, "_", GETSEGMENTCONDITION, "_segmentation.tsv")) &
+   file.exists(paste0(INDIR, SAMPLE3_TYPE, "_", SAMPLE3_ID, "_", SAMPLE3_SEX, "_SEGMENTS_C-", CTRL_N, "_", PON3, "_", GETSEGMENTCONDITION, "_segmentation.tsv"))) {PLOT_STYLE = "RUN_TRIO"}
 
-if(file.exists(paste0(INDIR, SAMPLE1_TYPE, "_", SAMPLE1_ID, "_", SAMPLE1_SEX, "_SEGMENTS_", PON1, "_", GETSEGMENTCONDITION, "_segmentation.tsv")) & 
-   file.exists(paste0(INDIR, SAMPLE2_TYPE, "_", SAMPLE2_ID, "_", SAMPLE2_SEX, "_SEGMENTS_", PON2, "_", GETSEGMENTCONDITION, "_segmentation.tsv")) &
-   file.exists(paste0(INDIR, SAMPLE3_TYPE, "_", SAMPLE3_ID, "_", SAMPLE3_SEX, "_SEGMENTS_", PON3, "_", GETSEGMENTCONDITION, "_segmentation.tsv"))==F) {PLOT_STYLE = "RUN_DUO"}
+if(file.exists(paste0(INDIR, SAMPLE1_TYPE, "_", SAMPLE1_ID, "_", SAMPLE1_SEX, "_SEGMENTS_C-", CTRL_N, "_", PON1, "_", GETSEGMENTCONDITION, "_segmentation.tsv")) & 
+   file.exists(paste0(INDIR, SAMPLE2_TYPE, "_", SAMPLE2_ID, "_", SAMPLE2_SEX, "_SEGMENTS_C-", CTRL_N, "_", PON2, "_", GETSEGMENTCONDITION, "_segmentation.tsv")) &
+   file.exists(paste0(INDIR, SAMPLE3_TYPE, "_", SAMPLE3_ID, "_", SAMPLE3_SEX, "_SEGMENTS_C-", CTRL_N, "_", PON3, "_", GETSEGMENTCONDITION, "_segmentation.tsv"))==F) {PLOT_STYLE = "RUN_DUO"}
 
-if(file.exists(paste0(INDIR, SAMPLE1_TYPE, "_", SAMPLE1_ID, "_", SAMPLE1_SEX, "_SEGMENTS_", PON1, "_", GETSEGMENTCONDITION, "_segmentation.tsv")) & 
-   file.exists(paste0(INDIR, SAMPLE2_TYPE, "_", SAMPLE2_ID, "_", SAMPLE2_SEX, "_SEGMENTS_", PON2, "_", GETSEGMENTCONDITION, "_segmentation.tsv"))==F &
-   file.exists(paste0(INDIR, SAMPLE3_TYPE, "_", SAMPLE3_ID, "_", SAMPLE3_SEX, "_SEGMENTS_", PON3, "_", GETSEGMENTCONDITION, "_segmentation.tsv"))) {
+if(file.exists(paste0(INDIR, SAMPLE1_TYPE, "_", SAMPLE1_ID, "_", SAMPLE1_SEX, "_SEGMENTS_C-", CTRL_N, "_", PON1, "_", GETSEGMENTCONDITION, "_segmentation.tsv")) & 
+   file.exists(paste0(INDIR, SAMPLE2_TYPE, "_", SAMPLE2_ID, "_", SAMPLE2_SEX, "_SEGMENTS_C-", CTRL_N, "_", PON2, "_", GETSEGMENTCONDITION, "_segmentation.tsv"))==F &
+   file.exists(paste0(INDIR, SAMPLE3_TYPE, "_", SAMPLE3_ID, "_", SAMPLE3_SEX, "_SEGMENTS_C-", CTRL_N, "_", PON3, "_", GETSEGMENTCONDITION, "_segmentation.tsv"))) {
   PLOT_STYLE = "RUN_DUO"
   SAMPLE2_ID=SAMPLE3_ID
   SAMPLE2_TYPE=SAMPLE3_TYPE
@@ -410,9 +408,9 @@ if(file.exists(paste0(INDIR, SAMPLE1_TYPE, "_", SAMPLE1_ID, "_", SAMPLE1_SEX, "_
   remove(SAMPLE3_DENOIS, SAMPLE3_DENOISABN, SAMPLE3_ALL, SAMPLE3_ALL_FILTERED, SAMPLE3_MODEL, SAMPLE3_MODEL_LOH)
   }
 
-if(file.exists(paste0(INDIR, SAMPLE1_TYPE, "_", SAMPLE1_ID, "_", SAMPLE1_SEX, "_SEGMENTS_", PON1, "_", GETSEGMENTCONDITION, "_segmentation.tsv")) & 
-   file.exists(paste0(INDIR, SAMPLE2_TYPE, "_", SAMPLE2_ID, "_", SAMPLE2_SEX, "_SEGMENTS_", PON2, "_", GETSEGMENTCONDITION, "_segmentation.tsv"))==F &
-   file.exists(paste0(INDIR, SAMPLE3_TYPE, "_", SAMPLE3_ID, "_", SAMPLE3_SEX, "_SEGMENTS_", PON3, "_", GETSEGMENTCONDITION, "_segmentation.tsv"))==F) {PLOT_STYLE = "RUN_SINGLE"}
+if(file.exists(paste0(INDIR, SAMPLE1_TYPE, "_", SAMPLE1_ID, "_", SAMPLE1_SEX, "_SEGMENTS_C-", CTRL_N, "_", PON1, "_", GETSEGMENTCONDITION, "_segmentation.tsv")) & 
+   file.exists(paste0(INDIR, SAMPLE2_TYPE, "_", SAMPLE2_ID, "_", SAMPLE2_SEX, "_SEGMENTS_C-", CTRL_N, "_", PON2, "_", GETSEGMENTCONDITION, "_segmentation.tsv"))==F &
+   file.exists(paste0(INDIR, SAMPLE3_TYPE, "_", SAMPLE3_ID, "_", SAMPLE3_SEX, "_SEGMENTS_C-", CTRL_N, "_", PON3, "_", GETSEGMENTCONDITION, "_segmentation.tsv"))==F) {PLOT_STYLE = "RUN_SINGLE"}
 
 
 message(paste0("   R ... ", date(), " - STAGE 3/5 - genome plot"))
@@ -821,6 +819,9 @@ for (ABN in (LISTofABNORM)) {
   #BUILD MAPPABILITY
   kpBars(kp, data.panel=2, chr=MAPPABILITY$CONTIG, x0=MAPPABILITY$START, x1=MAPPABILITY$END, y1=MAPPABILITY$VALUE, r0=0.44, r1=0.35, col="black")
 
+  #BUILD ENCODE BLACKLIST
+  kpRect(kp, data.panel=2, chr=ENCODE_BLACKLIST$CONTIG, x0=ENCODE_BLACKLIST$START, x1=ENCODE_BLACKLIST$END, y0=0, y1=1, r0=0.48, r1=0.46, col=rgb(130, 130, 130, max=255), border=NA)
+  
   if(file.exists(GET_CTRL_CN)==T) {
   #Add ctrl CN data itself
   kpRect(kp, data.panel=2, chr=CHR, x0=FROM, x1=TO, y0=0, y1=1, col=NA, r0=0.12, r1=0.02, border=NA)

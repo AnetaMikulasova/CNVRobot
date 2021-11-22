@@ -17,6 +17,6 @@ SEGMENTATION = read.delim(GET_SEGMENTATION, header = TRUE, stringsAsFactors = F,
   select(FEATURE, matches(paste0('^', GET_SEGMENTATION_ID, '$')))
 
 # message(paste0("   R ... ", date(), " - STAGE 3/3 - writing output"))
-write_tsv(SEGMENTATION, path = paste0(GET_SEGMENTATION_ID_OUT), col_names = T)
+write_tsv(SEGMENTATION, paste0(GET_SEGMENTATION_ID_OUT), col_names = T)
 
 # message(paste0("   R ... ", date(), " - FINISHED"))

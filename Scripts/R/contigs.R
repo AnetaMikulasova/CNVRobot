@@ -14,12 +14,12 @@ CONTIGS = c(CONTIGS_NUM, as.vector(outer("chr", CONTIGS_NUM, paste, sep="")))
 REF_FAI = read.delim(GET_REF_FAI, header = F, stringsAsFactors = F) %>%
   select(V1, V2) %>%
   filter(V1 %in% CONTIGS)
-write_tsv(REF_FAI, path = paste0(GET_OUTPUT_CONTIG_SIZES), col_names = F) #replace the chromosome size file
+write_tsv(REF_FAI, paste0(GET_OUTPUT_CONTIG_SIZES), col_names = F) #replace the chromosome size file
 
 REF_FAI = REF_FAI %>%
   mutate(V3 = 0) %>%
   select(V1, V3, V2)
-write_tsv(REF_FAI, path = paste0(GET_OUTPUT_CONTIG), col_names = F) #replace the chromosome size file
+write_tsv(REF_FAI, paste0(GET_OUTPUT_CONTIG), col_names = F) #replace the chromosome size file
 
 
 

@@ -29,7 +29,7 @@ CTRL_CN_PREP = CTRL_CN_PREP %>%
 
 message(paste0("   R ... ", date(), " - STAGE 3/3 - writing output"))
 
-write_tsv(CTRL_CN_PREP, path = OUTPUT, col_names = T)
+write_tsv(CTRL_CN_PREP, OUTPUT, col_names = T)
 
 
 #create IGV tracks
@@ -39,19 +39,19 @@ IGV_FofCASES = CTRL_CN_PREP %>% select(CONTIG, START, END, FofCASES) %>%
   mutate(START = START - 1) %>%
   arrange(CONTIG, START, END)
 IGV_FofCASES_OUTPUT = paste0(gsub(".tsv", "", OUTPUT), "_freqofcases")
-write_tsv(IGV_FofCASES, path = IGV_FofCASES_OUTPUT, col_names = F)
+write_tsv(IGV_FofCASES, IGV_FofCASES_OUTPUT, col_names = F)
 #create IGV file - losses
 IGV_FofLOSS = CTRL_CN_PREP %>% select(CONTIG, START, END, FofLOSS) %>% filter(!is.na(FofLOSS)) %>%
   mutate(START = START - 1) %>%
   arrange(CONTIG, START, END)
 IGV_FofLOSS_OUTPUT = paste0(gsub(".tsv", "", OUTPUT), "_freqofloss")
-write_tsv(IGV_FofLOSS, path = IGV_FofLOSS_OUTPUT, col_names = F)
+write_tsv(IGV_FofLOSS, IGV_FofLOSS_OUTPUT, col_names = F)
 #create IGV file - losses
 IGV_FofGAIN = CTRL_CN_PREP %>% select(CONTIG, START, END, FofGAIN) %>% filter(!is.na(FofGAIN)) %>%
   mutate(START = START - 1) %>%
   arrange(CONTIG, START, END)
 IGV_FofGAIN_OUTPUT = paste0(gsub(".tsv", "", OUTPUT), "_freqofgain")
-write_tsv(IGV_FofGAIN, path = IGV_FofGAIN_OUTPUT, col_names = F)
+write_tsv(IGV_FofGAIN, IGV_FofGAIN_OUTPUT, col_names = F)
 
 
 

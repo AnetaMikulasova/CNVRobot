@@ -8,36 +8,37 @@ suppressPackageStartupMessages(library(tidyverse))
 GETBANDUCSC          = args[1] %>% as.character()
 GETCAPTUREID         = args[2] %>% as.character()
 GETPROJECTID         = args[3] %>% as.character()
-GETRAWCOUNT          = args[4] %>% as.character()
-GETALLELIC           = args[5] %>% as.character()
-GETSTANDARD          = args[6] %>% as.character()
-GETDENOIS            = args[7] %>% as.character()
-GETGROUPID           = args[8] %>% as.character()
-GETCASEID            = args[9] %>% as.character()
-GETCASETYPE          = args[10] %>% as.character()
-GETCASESEX           = args[11] %>% as.character()
-GETPONSEX            = args[12] %>% as.character()
-NofCTRL_TOTAL        = args[13] %>% as.numeric()
-NofCTRL_USED         = args[14] %>% as.numeric()
-DIFFERENCE           = args[15] %>% as.numeric()
-MINSIZE              = args[16] %>% as.numeric()
-MINSIZE_SUB          = args[17] %>% as.numeric()
-MINPROBE             = args[18] %>% as.numeric()
-MINPROBE_SUB         = args[19] %>% as.numeric()
-MINKEEP              = args[20] %>% as.numeric()
-MINLOSS              = args[21] %>% as.numeric()
-MINLOSS_SUB          = args[22] %>% as.numeric()
-MINLOSS_BIAL         = args[23] %>% as.numeric()
-MINGAIN              = args[24] %>% as.numeric()
-MINGAIN_SUB          = args[25] %>% as.numeric()
-GAP                  = args[26] %>% as.numeric()
-SMOOTHPERC           = args[27] %>% as.numeric()
-AFDIF                = args[28] %>% as.numeric()
-AFSIZE               = args[29] %>% as.numeric()
-AFPROBES             = args[30] %>% as.numeric()
-GETSEGMENTCONDITION  = args[31] %>% as.character()
-QCTABLEIN            = args[32] %>% as.character()
-OUTPUT_STANDARD      = args[33] %>% as.character()
+GETPROJECTTYPE       = args[4] %>% as.character()
+GETRAWCOUNT          = args[5] %>% as.character()
+GETALLELIC           = args[6] %>% as.character()
+GETSTANDARD          = args[7] %>% as.character()
+GETDENOIS            = args[8] %>% as.character()
+GETGROUPID           = args[9] %>% as.character()
+GETCASEID            = args[10] %>% as.character()
+GETCASETYPE          = args[11] %>% as.character()
+GETCASESEX           = args[12] %>% as.character()
+GETPONSEX            = args[13] %>% as.character()
+NofCTRL_TOTAL        = args[14] %>% as.numeric()
+NofCTRL_USED         = args[15] %>% as.numeric()
+DIFFERENCE           = args[16] %>% as.numeric()
+MINSIZE              = args[17] %>% as.numeric()
+MINSIZE_SUB          = args[18] %>% as.numeric()
+MINPROBE             = args[19] %>% as.numeric()
+MINPROBE_SUB         = args[20] %>% as.numeric()
+MINKEEP              = args[21] %>% as.numeric()
+MINLOSS              = args[22] %>% as.numeric()
+MINLOSS_SUB          = args[23] %>% as.numeric()
+MINLOSS_BIAL         = args[24] %>% as.numeric()
+MINGAIN              = args[25] %>% as.numeric()
+MINGAIN_SUB          = args[26] %>% as.numeric()
+GAP                  = args[27] %>% as.numeric()
+SMOOTHPERC           = args[28] %>% as.numeric()
+AFDIF                = args[29] %>% as.numeric()
+AFSIZE               = args[30] %>% as.numeric()
+AFPROBES             = args[31] %>% as.numeric()
+GETSEGMENTCONDITION  = args[32] %>% as.character()
+QCTABLEIN            = args[33] %>% as.character()
+OUTPUT_STANDARD      = args[34] %>% as.character()
 
 
 message(paste0("   R ... ", date(), " - STAGE 1/5 - loading data"))
@@ -60,6 +61,18 @@ if(file.exists(QCTABLEIN)==T) {
     mutate(CASE_SEX = ifelse(CASE_SEX == "FALSE", "F", CASE_SEX)) %>%
     mutate(PON_SEX = ifelse(PON_SEX == "FALSE", "F", PON_SEX))
 }
+
+#define smooth coefficient for the difference in abnormal segments
+#why? Because in germline analysis I expect gain, loss of one or two allele; but in cancer there can be more CN states due to aneuploidies
+if(GETPROJECTTYPE == "germline") {
+  DIFFERENCE_SMOOTH_COEF = 2
+  DIFFERENCE_SMOOTH_COEF_SUB = 1.5
+}
+if(GETPROJECTTYPE != "germline") {
+  DIFFERENCE_SMOOTH_COEF = 1
+  DIFFERENCE_SMOOTH_COEF_SUB = 1
+}
+
 
 #Functions
 rowShift <- function(x, shiftLen = 1L) {
@@ -236,10 +249,10 @@ for (CHR in (LISTofCHR)) {
           #NEW - define difference
           DENOIS_DATA_PART_PH1 = DENOIS_DATA_PART_PH1 %>%
             mutate(DIFFERENCE_EDIT = DIFFERENCE) %>%
-            mutate(DIFFERENCE_EDIT = ifelse(LOG2_COPY_RATIO <= MINLOSS_SUB_EDIT & rowShift(LOG2_COPY_RATIO, -1) <= MINLOSS_SUB_EDIT, DIFFERENCE*1.5, DIFFERENCE_EDIT)) %>%
-            mutate(DIFFERENCE_EDIT = ifelse(LOG2_COPY_RATIO >= MINGAIN_SUB_EDIT & rowShift(LOG2_COPY_RATIO, -1) >= MINGAIN_SUB_EDIT, DIFFERENCE*1.5, DIFFERENCE_EDIT)) %>%
-            mutate(DIFFERENCE_EDIT = ifelse(LOG2_COPY_RATIO <= MINLOSS_EDIT & rowShift(LOG2_COPY_RATIO, -1) <= MINLOSS_EDIT, DIFFERENCE*2, DIFFERENCE_EDIT)) %>%
-            mutate(DIFFERENCE_EDIT = ifelse(LOG2_COPY_RATIO >= MINGAIN_EDIT & rowShift(LOG2_COPY_RATIO, -1) >= MINGAIN_EDIT, DIFFERENCE*2, DIFFERENCE_EDIT)) %>%
+            mutate(DIFFERENCE_EDIT = ifelse(LOG2_COPY_RATIO <= MINLOSS_SUB_EDIT & rowShift(LOG2_COPY_RATIO, -1) <= MINLOSS_SUB_EDIT, DIFFERENCE*DIFFERENCE_SMOOTH_COEF_SUB, DIFFERENCE_EDIT)) %>%
+            mutate(DIFFERENCE_EDIT = ifelse(LOG2_COPY_RATIO >= MINGAIN_SUB_EDIT & rowShift(LOG2_COPY_RATIO, -1) >= MINGAIN_SUB_EDIT, DIFFERENCE*DIFFERENCE_SMOOTH_COEF_SUB, DIFFERENCE_EDIT)) %>%
+            mutate(DIFFERENCE_EDIT = ifelse(LOG2_COPY_RATIO <= MINLOSS_EDIT & rowShift(LOG2_COPY_RATIO, -1) <= MINLOSS_EDIT, DIFFERENCE*DIFFERENCE_SMOOTH_COEF, DIFFERENCE_EDIT)) %>%
+            mutate(DIFFERENCE_EDIT = ifelse(LOG2_COPY_RATIO >= MINGAIN_EDIT & rowShift(LOG2_COPY_RATIO, -1) >= MINGAIN_EDIT, DIFFERENCE*DIFFERENCE_SMOOTH_COEF, DIFFERENCE_EDIT)) %>%
             mutate(DIFFERENCE_EDIT = ifelse(is.na(DIFFERENCE_EDIT), DIFFERENCE, DIFFERENCE_EDIT))
             
           DENOIS_DATA_PART_PH1 = DENOIS_DATA_PART_PH1 %>%
@@ -313,10 +326,10 @@ LISTofCHR = unique(PHASE1$CONTIG) %>% as.list()
           #NEW - define difference
           DENOIS_DATA_PART_PH2 = DENOIS_DATA_PART_PH2 %>%
             mutate(DIFFERENCE_EDIT2 = DIFFERENCE) %>%
-            mutate(DIFFERENCE_EDIT2 = ifelse(LOG2_COPY_RATIO <= MINLOSS_SUB_EDIT & rowShift(LOG2_COPY_RATIO, -1) <= MINLOSS_SUB_EDIT, DIFFERENCE*1.5, DIFFERENCE_EDIT2)) %>%
-            mutate(DIFFERENCE_EDIT2 = ifelse(LOG2_COPY_RATIO >= MINGAIN_SUB_EDIT & rowShift(LOG2_COPY_RATIO, -1) >= MINGAIN_SUB_EDIT, DIFFERENCE*1.5, DIFFERENCE_EDIT2)) %>%
-            mutate(DIFFERENCE_EDIT2 = ifelse(LOG2_COPY_RATIO <= MINLOSS_EDIT & rowShift(LOG2_COPY_RATIO, -1) <= MINLOSS_EDIT, DIFFERENCE*2, DIFFERENCE_EDIT2)) %>%
-            mutate(DIFFERENCE_EDIT2 = ifelse(LOG2_COPY_RATIO >= MINGAIN_EDIT & rowShift(LOG2_COPY_RATIO, -1) >= MINGAIN_EDIT, DIFFERENCE*2, DIFFERENCE_EDIT2)) %>%
+            mutate(DIFFERENCE_EDIT2 = ifelse(LOG2_COPY_RATIO <= MINLOSS_SUB_EDIT & rowShift(LOG2_COPY_RATIO, -1) <= MINLOSS_SUB_EDIT, DIFFERENCE*DIFFERENCE_SMOOTH_COEF_SUB, DIFFERENCE_EDIT2)) %>%
+            mutate(DIFFERENCE_EDIT2 = ifelse(LOG2_COPY_RATIO >= MINGAIN_SUB_EDIT & rowShift(LOG2_COPY_RATIO, -1) >= MINGAIN_SUB_EDIT, DIFFERENCE*DIFFERENCE_SMOOTH_COEF_SUB, DIFFERENCE_EDIT2)) %>%
+            mutate(DIFFERENCE_EDIT2 = ifelse(LOG2_COPY_RATIO <= MINLOSS_EDIT & rowShift(LOG2_COPY_RATIO, -1) <= MINLOSS_EDIT, DIFFERENCE*DIFFERENCE_SMOOTH_COEF, DIFFERENCE_EDIT2)) %>%
+            mutate(DIFFERENCE_EDIT2 = ifelse(LOG2_COPY_RATIO >= MINGAIN_EDIT & rowShift(LOG2_COPY_RATIO, -1) >= MINGAIN_EDIT, DIFFERENCE*DIFFERENCE_SMOOTH_COEF, DIFFERENCE_EDIT2)) %>%
             mutate(DIFFERENCE_EDIT2 = ifelse(is.na(DIFFERENCE_EDIT2), DIFFERENCE, DIFFERENCE_EDIT2))
           
           DENOIS_DATA_PART_PH2 = DENOIS_DATA_PART_PH2 %>%
@@ -425,10 +438,10 @@ LISTofCHR = unique(PHASE2$CONTIG) %>% as.list()
           #NEW - define difference
           DENOIS_DATA_PART_PH3 = DENOIS_DATA_PART_PH3 %>%
             mutate(DIFFERENCE_EDIT3 = DIFFERENCE) %>%
-            mutate(DIFFERENCE_EDIT3 = ifelse(MEAN_L2R <= MINLOSS_SUB_EDIT & rowShift(MEAN_L2R, -1) <= MINLOSS_SUB_EDIT, DIFFERENCE*1.5, DIFFERENCE_EDIT3)) %>%
-            mutate(DIFFERENCE_EDIT3 = ifelse(MEAN_L2R >= MINGAIN_SUB_EDIT & rowShift(MEAN_L2R, -1) >= MINGAIN_SUB_EDIT, DIFFERENCE*1.5, DIFFERENCE_EDIT3)) %>%       
-            mutate(DIFFERENCE_EDIT3 = ifelse(MEAN_L2R <= MINLOSS_EDIT & rowShift(MEAN_L2R, -1) <= MINLOSS_EDIT, DIFFERENCE*2, DIFFERENCE_EDIT3)) %>%
-            mutate(DIFFERENCE_EDIT3 = ifelse(MEAN_L2R >= MINGAIN_EDIT & rowShift(MEAN_L2R, -1) >= MINGAIN_EDIT, DIFFERENCE*2, DIFFERENCE_EDIT3)) %>%
+            mutate(DIFFERENCE_EDIT3 = ifelse(MEAN_L2R <= MINLOSS_SUB_EDIT & rowShift(MEAN_L2R, -1) <= MINLOSS_SUB_EDIT, DIFFERENCE*DIFFERENCE_SMOOTH_COEF_SUB, DIFFERENCE_EDIT3)) %>%
+            mutate(DIFFERENCE_EDIT3 = ifelse(MEAN_L2R >= MINGAIN_SUB_EDIT & rowShift(MEAN_L2R, -1) >= MINGAIN_SUB_EDIT, DIFFERENCE*DIFFERENCE_SMOOTH_COEF_SUB, DIFFERENCE_EDIT3)) %>%       
+            mutate(DIFFERENCE_EDIT3 = ifelse(MEAN_L2R <= MINLOSS_EDIT & rowShift(MEAN_L2R, -1) <= MINLOSS_EDIT, DIFFERENCE*DIFFERENCE_SMOOTH_COEF, DIFFERENCE_EDIT3)) %>%
+            mutate(DIFFERENCE_EDIT3 = ifelse(MEAN_L2R >= MINGAIN_EDIT & rowShift(MEAN_L2R, -1) >= MINGAIN_EDIT, DIFFERENCE*DIFFERENCE_SMOOTH_COEF, DIFFERENCE_EDIT3)) %>%
             mutate(DIFFERENCE_EDIT3 = ifelse(is.na(DIFFERENCE_EDIT3), DIFFERENCE, DIFFERENCE_EDIT3))
           
           DENOIS_DATA_PART_PH3 = DENOIS_DATA_PART_PH3 %>%
@@ -698,7 +711,7 @@ ALLSEGMENTS$END = as.integer(as.numeric(ALLSEGMENTS$END))
 names(ALLSEGMENTS) = c("SEGMENTATION_CONDITION", "PON_SEX_N", "SAMPLE_ID1", "SAMPLE_ID2", "SAMPLE_TYPE", "SAMPLE_SEX", "CONTIG", "START", "END", "MEAN_L2R", "MEAN_L2R_EDIT", "SIZE", "PROBES", "FILTER", "TYPE", "CHRBAND")
 
 
-write_tsv(ALLSEGMENTS, path = paste0(OUTPUT_STANDARD), col_names = T)
+write_tsv(ALLSEGMENTS, paste0(OUTPUT_STANDARD), col_names = T)
 
 
 
@@ -772,7 +785,7 @@ names(RESULTS) = c("SEGMENTATION_CONDITION", "CAPTURE_ID", "PROJECT_ID", "GROUP_
 
 RESULTS = rbind(QCTABLE, RESULTS) %>%
   unique()
-write_tsv(RESULTS, path = QCTABLEIN, col_names = T)
+write_tsv(RESULTS, QCTABLEIN, col_names = T)
 #-------------------------------------------------------------------------------------------
 
 message(paste0("   R ... ", date(), " - FINISHED"))

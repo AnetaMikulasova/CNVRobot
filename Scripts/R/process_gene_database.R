@@ -69,7 +69,7 @@ for (each in LISTofID) {
   GENES_DTB_PROCESSED = rbind(GENES_DTB_PROCESSED, EXPORTED_TABLE)
 } 
 
-write_tsv(GENES_DTB_PROCESSED, path = paste0(GET_GENES_DTB_PROCESSED), col_names = T)
+write_tsv(GENES_DTB_PROCESSED, paste0(GET_GENES_DTB_PROCESSED), col_names = T)
 
 
   

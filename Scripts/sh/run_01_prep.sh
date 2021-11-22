@@ -422,11 +422,16 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 				LIST_OF_CONTIGS=""
 				LIST_OF_MISSING_IN_REF=""
 				for contig_in_gnomad in ${CONTIG_in_GNOMAD}; do
-					for contig_in_ref in ${CONTIG_in_REF}; do
-						[ ${contig_in_ref} == ${contig_in_gnomad} ] && LIST_OF_CONTIGS=`echo $LIST_OF_CONTIGS" "$contig_in_gnomad`
-						[ ${contig_in_ref} != ${contig_in_gnomad} ] && LIST_OF_MISSING_IN_REF=`echo $LIST_OF_MISSING_IN_REF" "$contig_in_gnomad`
-					done
+					if [[ ${CONTIG_in_REF[*]} =~ (^|[[:space:]])"$contig_in_gnomad"($|[[:space:]]) ]]; then
+					    LIST_OF_CONTIGS=`echo $LIST_OF_CONTIGS" "$contig_in_gnomad`
+					else
+					    LIST_OF_MISSING_IN_REF=`echo $LIST_OF_MISSING_IN_REF" "$contig_in_gnomad`
+					fi
 				done
+
+				#delete a space at the beggining if present (when one contig in analysis)
+				LIST_OF_CONTIGS=`echo $LIST_OF_CONTIGS`
+				LIST_OF_MISSING_IN_REF=`echo $LIST_OF_MISSING_IN_REF`
 
 				#skip sorting for contigs if all contigs in gnomAD are present in reference
 				if [[ "${LIST_OF_MISSING_IN_REF}" == "" ]]; then
@@ -880,6 +885,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 						${UCSC_CHROMOSOME_BANDS} \
 						${CAPTURE_ID} \
 						${PROJECT_ID} \
+						${PROJECT_TYPE} \
 						${CTRL_COUNT_TSV_DIR}${RESULTS_DATA_PATTERN}"_counts.tsv" \
 						${CTRL_MAF_DIR}${RESULTS_DATA_PATTERN}"_allelicCounts"${GNOMAD_COUNT_PATTERN}".rds" \
 						${CTRL_STANDARD_DIR}${RESULTS_DATA_PATTERN}"_standardizedCR_PoN-"${PON_SEX_ID}".tsv" \

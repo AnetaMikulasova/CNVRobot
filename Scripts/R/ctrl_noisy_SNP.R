@@ -81,5 +81,5 @@ GNOMAD = GNOMAD %>%
 message(paste0("   R ... ", date(), " - STAGE 5/5 - writing output"))
 
 #output for filtering gnomad 
-write_tsv(GNOMAD, path = paste0(GNOMAD_OUT), col_names = F)
+write_tsv(GNOMAD, paste0(GNOMAD_OUT), col_names = F)
 

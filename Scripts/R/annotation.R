@@ -9,15 +9,16 @@ suppressPackageStartupMessages(library(expss))
 GET_DTB_DGVDATA         = args[1]%>% as.character()
 GET_GENES_DTB_PROCESSED = args[2] %>% as.character()
 GET_MAPPABILITY_DTB     = args[3] %>% as.character()
-GET_SEGMENTATION        = args[4] %>% as.character()
-GET_CTRL_CN             = args[5] %>% as.character()
-GET_CTRL_N              = args[6] %>% as.numeric()
-GET_CTRL_TYPE           = args[7] %>% as.character()
-MINGAIN                 = args[8] %>% as.numeric() * 0.95
-MINGAIN_SUB             = args[9] %>% as.numeric()
-MINLOSS                 = args[10] %>% as.numeric() * 0.95
-MINLOSS_SUB             = args[11]%>% as.numeric()
-OUTPUT                  = args[12]%>% as.character()
+GET_ENCODE_BLACKLIST    = args[4]%>% as.character()
+GET_SEGMENTATION        = args[5] %>% as.character()
+GET_CTRL_CN             = args[6] %>% as.character()
+GET_CTRL_N              = args[7] %>% as.numeric()
+GET_CTRL_TYPE           = args[8] %>% as.character()
+MINGAIN                 = args[9] %>% as.numeric() * 0.95
+MINGAIN_SUB             = args[10] %>% as.numeric()
+MINLOSS                 = args[11] %>% as.numeric() * 0.95
+MINLOSS_SUB             = args[12]%>% as.numeric()
+OUTPUT                  = args[13]%>% as.character()
 
 
 message(paste0("   R ... ", date(), " - STAGE 1/4 - loading data"))
@@ -47,7 +48,8 @@ DTB_DGVDATA = readRDS(GET_DTB_DGVDATA) %>% mutate(SIZE = END - START + 1) #%>% m
 GENES_DTB_PROCESSED = read.delim(paste0(GET_GENES_DTB_PROCESSED), header=TRUE, stringsAsFactors = F)
 #load mappability dtb
 MAPPABILITY_DTB = readRDS(GET_MAPPABILITY_DTB)
-
+#load ENCODE blacklist
+ENCODE_BLACKLIST = read.delim(paste0(GET_ENCODE_BLACKLIST), header=TRUE, stringsAsFactors = F)
 
 #Functions
 #----------------------------------------------------------------------------------------------------------------------
@@ -122,7 +124,7 @@ ANNOTATION = rbind(ANNOTATION, ORIG_FILE_INPUT_NOT_TO_ANNOTATE) %>% arrange(N) #
 
 
 
-message(paste0("   R ... ", date(), " - STAGE 3/4 - incorporating annotation by controls, DGV and mappability"))
+message(paste0("   R ... ", date(), " - STAGE 3/4 - incorporating annotation by controls, DGV, mappability and ENCODE blacklist"))
 #----------------------------------------------------------------------------------------------------------------------
 
 #2) INCORPORATE CTRLs, DGV
@@ -133,8 +135,8 @@ SEGMENTATION_NOT_TO_ANNOTATE = ANNOTATION %>% filter(TYPE == "NORMAL" | TYPE == 
 if(nrow(SEGMENTATION_TO_ANNOTATE)>0) {
 #CN
 #----------------------------------------------------------------------
-ADD = data.frame(0.1, "filterout", 0.1,"filterout", 0.1,0.1,"filterout",0.1,0.1,"filterout", 0.1,"filterout")
-names(ADD) = c("CTRL_N", "CTRL_TYPE", "CTRL_NA_FRACTION", "CTRL_NOISE_PREDICTION", "CTRL_FofGAIN", "CTRL_FofLOSS", "CTRL_CNV_PREDICTION", "DGV_NofGAIN_AROUND", "DGV_NofLOSS_AROUND", "DGV_PREDICTION", "MAPPABILITY", "MAPPABILITY_PREDICTION")
+ADD = data.frame(0.1, "filterout", 0.1,"filterout", 0.1,0.1,"filterout",0.1,0.1,"filterout", 0.1,"filterout", 0.1, "filterout")
+names(ADD) = c("CTRL_N", "CTRL_TYPE", "CTRL_NA_FRACTION", "CTRL_NOISE_PREDICTION", "CTRL_FofGAIN", "CTRL_FofLOSS", "CTRL_CNV_PREDICTION", "DGV_NofGAIN_AROUND", "DGV_NofLOSS_AROUND", "DGV_PREDICTION", "MAPPABILITY", "MAPPABILITY_PREDICTION", "ENCODE_BLACKLIST_OVERLAP", "ENCODE_BLACKLIST_PREDICTION")
 
 GENERAL_CUT_OFF=0.25
 
@@ -254,11 +256,37 @@ for(line in 1:nrow(SEGMENTATION_TO_ANNOTATE)) {
     
     if(MAPPABILITY >= (1-GENERAL_CUT_OFF)) {MAPPABILITY_PREDICTION = "high"} else {MAPPABILITY_PREDICTION = "low"}
     
-
+    
+    #ENCODE black list
+    SEGM_SIZE = SEGMENT_END - SEGMENT_START + 1
+    
+    ENCODE_BLACKLIST_TEMP = ENCODE_BLACKLIST %>%
+      filter(CONTIG == SEGMENT_CONTIG) %>% 
+      filter(START <= SEGMENT_END) %>% 
+      filter(END >= SEGMENT_START) 
+    
+    if(nrow(ENCODE_BLACKLIST_TEMP) == 0) {
+      ENCODE_BLACKLIST_OVERLAP=0
+      ENCODE_BLACKLIST_PREDICTION="no"
+    }
+    
+    if(nrow(ENCODE_BLACKLIST_TEMP) > 0) {
+      ENCODE_BLACKLIST_TEMP = ENCODE_BLACKLIST_TEMP%>%
+        mutate(START = ifelse(START < SEGMENT_START, SEGMENT_START, START)) %>%
+        mutate(END = ifelse(END > SEGMENT_END, SEGMENT_END, END)) %>%
+        mutate(SIZE = END - START + 1)
+      
+      ENCODE_BLACKLIST_OVERLAP=sum(ENCODE_BLACKLIST_TEMP$SIZE)/SEGM_SIZE
+      if(ENCODE_BLACKLIST_OVERLAP >= GENERAL_CUT_OFF) {ENCODE_BLACKLIST_PREDICTION="yes"}
+      if(ENCODE_BLACKLIST_OVERLAP < GENERAL_CUT_OFF) {ENCODE_BLACKLIST_PREDICTION="no"}
+      
+    }
+    
+    
     
   #---------------------------------------------------------
   
-  x = data.frame(CTRL_N, CTRL_TYPE, CTRL_NA_FRACTION, CTRL_NOISE_PREDICTION, CTRL_FofGAIN, CTRL_FofLOSS, CTRL_CNV_PREDICTION, DGV_NofGAIN_AROUND, DGV_NofLOSS_AROUND, DGV_PREDICTION, MAPPABILITY, MAPPABILITY_PREDICTION)
+  x = data.frame(CTRL_N, CTRL_TYPE, CTRL_NA_FRACTION, CTRL_NOISE_PREDICTION, CTRL_FofGAIN, CTRL_FofLOSS, CTRL_CNV_PREDICTION, DGV_NofGAIN_AROUND, DGV_NofLOSS_AROUND, DGV_PREDICTION, MAPPABILITY, MAPPABILITY_PREDICTION, ENCODE_BLACKLIST_OVERLAP, ENCODE_BLACKLIST_PREDICTION)
   
   ADD = rbind(ADD, x)
   ADD = ADD %>% filter(CTRL_CNV_PREDICTION != "filterout")
@@ -280,7 +308,9 @@ SEGMENTATION_NOT_TO_ANNOTATE = SEGMENTATION_NOT_TO_ANNOTATE %>%
   mutate(DGV_NofLOSS_AROUND = "NA") %>%
   mutate(DGV_PREDICTION = "NA") %>%
   mutate(MAPPABILITY = "NA") %>%
-  mutate(MAPPABILITY_PREDICTION = "NA")
+  mutate(MAPPABILITY_PREDICTION = "NA") %>%
+  mutate(ENCODE_BLACKLIST_OVERLAP = "NA") %>%
+  mutate(ENCODE_BLACKLIST_PREDICTION = "NA")
 
 if(nrow(SEGMENTATION_TO_ANNOTATE)>0) {SEGMENTATION = rbind(SEGMENTATION_TO_ANNOTATE, SEGMENTATION_NOT_TO_ANNOTATE) %>% arrange(N)}
 if(nrow(SEGMENTATION_TO_ANNOTATE)==0) {SEGMENTATION = SEGMENTATION_NOT_TO_ANNOTATE}
@@ -296,8 +326,10 @@ SEGMENTATION = SEGMENTATION %>%
   mutate(FILTER = ifelse(FILTER != "PASS" & DGV_PREDICTION == "high", paste0(FILTER, ";", "dgv_high_cnv"), FILTER)) %>%
   mutate(FILTER = ifelse(FILTER == "PASS" & DGV_PREDICTION == "high", "dgv_high_cnv", FILTER)) %>%
   mutate(FILTER = ifelse(FILTER != "PASS" & MAPPABILITY_PREDICTION == "low", paste0(FILTER, ";", "mappability_low"), FILTER)) %>%
-  mutate(FILTER = ifelse(FILTER == "PASS" & MAPPABILITY_PREDICTION == "low", "mappability_low", FILTER))
-  
+  mutate(FILTER = ifelse(FILTER == "PASS" & MAPPABILITY_PREDICTION == "low", "mappability_low", FILTER)) %>%
+  mutate(FILTER = ifelse(FILTER != "PASS" & ENCODE_BLACKLIST_PREDICTION == "yes", paste0(FILTER, ";", "encode_blacklist"), FILTER)) %>%
+  mutate(FILTER = ifelse(FILTER == "PASS" & ENCODE_BLACKLIST_PREDICTION == "yes", "encode_blacklist", FILTER))
+
 message(paste0("   R ... ", date(), " - STAGE 4/4 - writing output"))
 
 
@@ -305,14 +337,14 @@ message(paste0("   R ... ", date(), " - STAGE 4/4 - writing output"))
 #----------------------------------------------------------------------------------------------------------------------
 names(SEGMENTATION) = c(colnames(ANNOTATION), "CONTROLS_N", "CONTROLS_DENOIS_STYLE", "CONTROLS_NA_FRACTION", "CONTROLS_NOISE_PREDICTION", 
                         "CONTROLS_GAIN_FREQ", "CONTROLS_LOSS_FREQ", "CONTROLS_CN_FREQ_PREDICTION", "DGV_GAIN_n_per_kb_around", "DGV_LOSS_n_per_kb_around", "DGV_CN_FREQ_PREDICTION",
-                        "MAPPABILITY", "MAPPABILITY_PREDICTION")
+                        "MAPPABILITY", "MAPPABILITY_PREDICTION", "ENCODE_BLACKLIST_OVERLAP", "ENCODE_BLACKLIST_PREDICTION")
 SEGMENTATION = SEGMENTATION %>% select(-c("N"))
 #----------------------------------------------------------------------------------------------------------------------
 
 
 #Write output
 #----------------------------------------------------------------------------------------------------------------------
-write_tsv(SEGMENTATION, path = paste0(OUTPUT), col_names = T)
+write_tsv(SEGMENTATION, paste0(OUTPUT), col_names = T)
 
 message(paste0("   R ... ", date(), " - FINISHED"))
 

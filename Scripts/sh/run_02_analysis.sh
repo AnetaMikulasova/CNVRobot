@@ -95,7 +95,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 	CTRL_COUNT_HDF_DIR=${SUPPORT_FILES}"Controls/counts/hdf5/"
     CTRL_COUNT_MAF_DIR=${SUPPORT_FILES}"Controls/maf/"
 
-	SAMPLE_PoN_DIR=${SUPPORT_FILES}"Samples/PoN/NofCTRL="${N}"/"${PROJECT_ID}"/"
+	SAMPLE_PoN_DIR=${SUPPORT_FILES}"Samples/PoN_NofCTRL="${N}"/"
 	if [ ${CTRL} == "yes" ]; then 
 		mkdir -p ${SAMPLE_PoN_DIR}
 	fi
@@ -204,6 +204,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 			UCSC_CHROMOSOME_BANDS=${DATABASES_DIR}"UCSC/chr_bands/GRCh37_cytoBand.txt"
 			UCSC_CHROMOSOME_CENTROMERE=${DATABASES_DIR}"UCSC/chr_centromere/GRCh37_centromeres.txt"
 			MAPPABILITY=${DATABASES_DIR}"MAPPABILITY/mappability_GRCh37.rds"
+			ENCODE_BLACK_LIST=${DATABASES_DIR}"ENCODE_BLACKLIST/ENCODE_blacklist_GRCh37.txt"
 		else
 			PLOT_ASSEMBLY="hg19"
 			GNOMAD=${DATABASES_DIR}"GNOMAD/gnomad_2.1_hg19_liftover/gnomad_2.1_combine_processed_hg19_22XY.vcf.gz"
@@ -211,6 +212,8 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 			UCSC_CHROMOSOME_BANDS=${DATABASES_DIR}"UCSC/chr_bands/hg19_cytoBand.txt"
 			UCSC_CHROMOSOME_CENTROMERE=${DATABASES_DIR}"UCSC/chr_centromere/hg19_centromeres.txt"
 			MAPPABILITY=${DATABASES_DIR}"MAPPABILITY/mappability_hg19.rds"
+			ENCODE_BLACK_LIST=${DATABASES_DIR}"ENCODE_BLACKLIST/ENCODE_blacklist_hg19.txt"
+
 		fi
 		if [ ${GENE_ANNOTATION} == "default" ]; then
 			GENE_ANNOTATION=${DATABASES_DIR}"/GENE_ANNOTATION/RefSeqAll_hg19_191206.txt"
@@ -224,6 +227,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 	 		UCSC_CHROMOSOME_BANDS=${DATABASES_DIR}"UCSC/chr_bands/GRCh38_hg38_cytoBand.txt"
 	 		UCSC_CHROMOSOME_CENTROMERE=${DATABASES_DIR}"UCSC/chr_centromere/GRCh38_hg38_centromeres.txt"
 	 		MAPPABILITY=${DATABASES_DIR}"MAPPABILITY/mappability_hg38GRCh38.rds"
+	 		ENCODE_BLACK_LIST=${DATABASES_DIR}"ENCODE_BLACKLIST/ENCODE_blacklist_GRCh38_hg38.txt"
 	 	else
 			PLOT_ASSEMBLY="hg38"
 	 		GNOMAD=${DATABASES_DIR}"GNOMAD/gnomad_2.1_GRCh38_liftover/gnomad_2.1_combine_processed_GRCh38_22XY.vcf.gz"
@@ -231,6 +235,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 	 		UCSC_CHROMOSOME_BANDS=${DATABASES_DIR}"UCSC/chr_bands/GRCh38_cytoBand.txt"
 	 		UCSC_CHROMOSOME_CENTROMERE=${DATABASES_DIR}"UCSC/chr_centromere/GRCh38_centromeres.txt"
 	 		MAPPABILITY=${DATABASES_DIR}"MAPPABILITY/mappability_GRCh38.rds"
+	 		ENCODE_BLACK_LIST=${DATABASES_DIR}"ENCODE_BLACKLIST/ENCODE_blacklist_GRCh38.txt"
 	 	fi
 	 	if [ ${GENE_ANNOTATION} == "default" ]; then
 			GENE_ANNOTATION=${DATABASES_DIR}"/GENE_ANNOTATION/RefSeqAll_hg38_191206.txt"
@@ -331,11 +336,13 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 	 	[[ ${SAMPLE_3_SEX} == "" ]] && SAMPLE_3_SEX="NA"
 	 	[[ ${SAMPLE_3_BAM_PATH} == "" ]] && SAMPLE_3_BAM_PATH="NA"
 
-		RESULTS_DIR_GO=${RESULTS_DIR}${PROJECT_ID}"/"${PROJECT_ID}"_"${CAPTURE_ID}"_"${GENOME_VERSION}"_bin"${BIN}"bp_pad"${PADDING}"bp_NofCTRLS="${N}"/"${MAIN_ID}"/"
+		# RESULTS_DIR_GO=${RESULTS_DIR}${PROJECT_ID}"/"${PROJECT_ID}"_"${CAPTURE_ID}"_"${GENOME_VERSION}"_bin"${BIN}"bp_pad"${PADDING}"bp_NofCTRLS="${N}"/"${MAIN_ID}"/"
+		RESULTS_DIR_GO=${RESULTS_DIR}${PROJECT_ID}"/"${PROJECT_ID}"_"${CAPTURE_ID}"_"${GENOME_VERSION}"_bin"${BIN}"bp_pad"${PADDING}"bp/"${MAIN_ID}"/"
+
 		RESULTS_DATA_DIR=${RESULTS_DIR_GO}"data/"
 		mkdir -p ${RESULTS_DATA_DIR}
-		RESULTS_PLOT_DIR=${RESULTS_DIR_GO}"plot_"${SEGMENTATIONCONDITIONS}"/"
-		RESULTS_IGV_BED_DIR=${RESULTS_DIR_GO}"IGV_"${SEGMENTATIONCONDITIONS}"/"
+		# RESULTS_PLOT_DIR=${RESULTS_DIR_GO}"plot/"
+		# RESULTS_IGV_BED_DIR=${RESULTS_DIR_GO}"IGV/"
 
 		#process samples: read counts, prepare PoN
 		#====================================================================================
@@ -514,7 +521,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 						#CHECK - CTRL YES 
 						if [ ${CTRL} == "yes" ]; then 
 							# CHECK - PROCESSED DENOIS 
-							if ! ls ${RESULTS_DATA_PATTERN}"_denoisedCR_PoN-"${PON_SEX_ID}".tsv" 1> /dev/null 2>&1; then 
+							if ! ls ${RESULTS_DATA_PATTERN}"_denoisedCR_C-"${N}"_PoN-"${PON_SEX_ID}".tsv" 1> /dev/null 2>&1; then 
 								echo -e ${COL1}${BEG}${COL2}
 								echo -e ${COL1}"◼︎ $(date)"${COL2}
 								echo -e ${COL1}"◼︎ "${MAIN_ID}" - "${CASE_TYPE}" - "${CASE_ID}": denoising read count using PoN-"${PON_SEX_ID}${COL2} 
@@ -522,8 +529,8 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 								${GATK} DenoiseReadCounts \
 								    -I ${RESULTS_DATA_PATTERN}"_counts.hdf5" \
 								    --count-panel-of-normals ${SAMPLE_PoN_DIR}${MAIN_ID}"_PoN-"${PON_SEX_ID}".hdf5" \
-								    --standardized-copy-ratios ${RESULTS_DATA_PATTERN}"_standardizedCR_PoN-"${PON_SEX_ID}".tsv" \
-								    --denoised-copy-ratios ${RESULTS_DATA_PATTERN}"_denoisedCR_PoN-"${PON_SEX_ID}".tsv"
+								    --standardized-copy-ratios ${RESULTS_DATA_PATTERN}"_standardizedCR_C-"${N}"_PoN-"${PON_SEX_ID}".tsv" \
+								    --denoised-copy-ratios ${RESULTS_DATA_PATTERN}"_denoisedCR_C-"${N}"_PoN-"${PON_SEX_ID}".tsv"
 							#CHECK - PROCESSED DENOIS 
 							fi
 						#CHECK - CTRL YES 
@@ -536,7 +543,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 						#CHECK - CTRL YES 
 						if [ ${CTRL} == "no" ]; then 
 							# CHECK - PROCESSED DENOIS 
-							if ! ls ${RESULTS_DATA_PATTERN}"_denoisedCR_PoN-"${PON_SEX_ID}".tsv" 1> /dev/null 2>&1; then 
+							if ! ls ${RESULTS_DATA_PATTERN}"_denoisedCR_C-"${N}"_PoN-"${PON_SEX_ID}".tsv" 1> /dev/null 2>&1; then 
 								echo -e ${COL1}${BEG}${COL2}
 								echo -e ${COL1}"◼︎ $(date)"${COL2}
 								echo -e ${COL1}"◼︎ "${MAIN_ID}" - "${CASE_TYPE}" - "${CASE_ID}": denoising read count using PoN-"${PON_SEX_ID}${COL2} 
@@ -544,8 +551,8 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 								${GATK} DenoiseReadCounts \
 								    -I ${RESULTS_DATA_PATTERN}"_counts.hdf5" \
 								    --annotated-intervals ${INTERVALS_ANNOTATED} \
-								    --standardized-copy-ratios ${RESULTS_DATA_PATTERN}"_standardizedCR_PoN-"${PON_SEX_ID}".tsv" \
-								    --denoised-copy-ratios ${RESULTS_DATA_PATTERN}"_denoisedCR_PoN-"${PON_SEX_ID}".tsv"
+								    --standardized-copy-ratios ${RESULTS_DATA_PATTERN}"_standardizedCR_C-"${N}"_PoN-"${PON_SEX_ID}".tsv" \
+								    --denoised-copy-ratios ${RESULTS_DATA_PATTERN}"_denoisedCR_C-"${N}"_PoN-"${PON_SEX_ID}".tsv"
 							#CHECK - PROCESSED DENOIS 
 							fi
 						#CHECK - CTRL YES 
@@ -555,8 +562,8 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 						#segmentation of CN and LOH data
 						#============================================================================
 						#CHECK - SEGMENTATION 
-						if ! ls ${RESULTS_DATA_PATTERN}"_SEGMENTS_PoN-"${PON_SEX_ID}"_"${SEGMENTATIONCONDITIONS}"_segmentation.tsv" 1> /dev/null 2>&1; then
-							if ! ls ${RESULTS_DATA_PATTERN}"_SEGMENTS_PoN-"${PON_SEX_ID}"_"${SEGMENTATIONCONDITIONS}".tsv" 1> /dev/null 2>&1; then 
+						if ! ls ${RESULTS_DATA_PATTERN}"_SEGMENTS_C-"${N}"_PoN-"${PON_SEX_ID}"_"${SEGMENTATIONCONDITIONS}"_segmentation.tsv" 1> /dev/null 2>&1; then
+							if ! ls ${RESULTS_DATA_PATTERN}"_SEGMENTS_C-"${N}"_PoN-"${PON_SEX_ID}"_"${SEGMENTATIONCONDITIONS}".tsv" 1> /dev/null 2>&1; then 
 								echo -e ${COL1}${BEG}${COL2}
 								echo -e ${COL1}"◼︎ $(date)"${COL2}
 								echo -e ${COL1}"◼︎ "${MAIN_ID}" - "${CASE_TYPE}" - "${CASE_ID}": segmentation and quality control, using PoN-"${PON_SEX_ID}${COL2} 
@@ -567,7 +574,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 								if [[ ${SEGMENTATION_ID} == "smart-"* ]]; then	
 									SMART_SEGMENTATION=`Rscript --vanilla ${R}"segmentation_conditions_smart.R" \
 									${SEGMENTATION_ID} \
-									${RESULTS_DATA_PATTERN}"_denoisedCR_PoN-"${PON_SEX_ID}".tsv" \
+									${RESULTS_DATA_PATTERN}"_denoisedCR_C-"${N}"_PoN-"${PON_SEX_ID}".tsv" \
 									${INTERVALS_ANNOTATED} \
 									${SEQ_TYPE}`
 
@@ -585,10 +592,11 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 									${UCSC_CHROMOSOME_BANDS} \
 									${CAPTURE_ID} \
 									${PROJECT_ID} \
+									${PROJECT_TYPE} \
 									${RESULTS_DATA_PATTERN}"_counts.tsv" \
 									${RESULTS_DATA_PATTERN}"_allelicCounts"${GNOMAD_COUNT_PATTERN}".rds" \
-									${RESULTS_DATA_PATTERN}"_standardizedCR_PoN-"${PON_SEX_ID}".tsv" \
-									${RESULTS_DATA_PATTERN}"_denoisedCR_PoN-"${PON_SEX_ID}".tsv" \
+									${RESULTS_DATA_PATTERN}"_standardizedCR_C-"${N}"_PoN-"${PON_SEX_ID}".tsv" \
+									${RESULTS_DATA_PATTERN}"_denoisedCR_C-"${N}"_PoN-"${PON_SEX_ID}".tsv" \
 									${MAIN_ID} \
 									${CASE_ID} \
 									${CASE_TYPE} \
@@ -614,7 +622,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 									${SEGM_AFPROBE} \
 									${SEGMENTATION_ID}"_"${SEGMENTATION_FULL} \
 									${QCTABLE} \
-									${RESULTS_DATA_PATTERN}"_SEGMENTS_PoN-"${PON_SEX_ID}"_"${SEGMENTATIONCONDITIONS}"_segmentation.tsv"
+									${RESULTS_DATA_PATTERN}"_SEGMENTS_C-"${N}"_PoN-"${PON_SEX_ID}"_"${SEGMENTATIONCONDITIONS}"_segmentation.tsv"
 							fi
 						#CHECK - SEGMENTATION
 						fi
@@ -623,7 +631,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 						#incorporate gene annotation, ctrl and databases annotation
 						#============================================================================
 						#CHECK - ANNOTATION DTB
-						if ! ls ${RESULTS_DATA_PATTERN}"_SEGMENTS_PoN-"${PON_SEX_ID}"_"${SEGMENTATIONCONDITIONS}".tsv" 1> /dev/null 2>&1; then 
+						if ! ls ${RESULTS_DATA_PATTERN}"_SEGMENTS_C-"${N}"_PoN-"${PON_SEX_ID}"_"${SEGMENTATIONCONDITIONS}".tsv" 1> /dev/null 2>&1; then 
 							echo -e ${COL1}${BEG}${COL2}
 							echo -e ${COL1}"◼︎ $(date)"${COL2}
 							echo -e ${COL1}"◼︎ "${MAIN_ID}" - "${CASE_TYPE}" - "${CASE_ID}": incorporation of gene annotation, DGV and CTRLs to segmentation, using PoN-"${PON_SEX_ID}${COL2} 
@@ -633,7 +641,8 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 								${DGV} \
 								${GENE_ANNOTATION_PROCESSED} \
 								${MAPPABILITY} \
-								${RESULTS_DATA_PATTERN}"_SEGMENTS_PoN-"${PON_SEX_ID}"_"${SEGMENTATIONCONDITIONS}"_segmentation.tsv" \
+								${ENCODE_BLACK_LIST} \
+								${RESULTS_DATA_PATTERN}"_SEGMENTS_C-"${N}"_PoN-"${PON_SEX_ID}"_"${SEGMENTATIONCONDITIONS}"_segmentation.tsv" \
 								${CTRL_CN_FILE} \
 								${N} \
 								${CTRL_PON_SEX_SELECT} \
@@ -641,7 +650,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 								${SEGM_MINGAIN_SUB} \
 								${SEGM_MINLOSS} \
 								${SEGM_MINLOSS_SUB} \
-								${RESULTS_DATA_PATTERN}"_SEGMENTS_PoN-"${PON_SEX_ID}"_"${SEGMENTATIONCONDITIONS}".tsv"
+								${RESULTS_DATA_PATTERN}"_SEGMENTS_C-"${N}"_PoN-"${PON_SEX_ID}"_"${SEGMENTATIONCONDITIONS}".tsv"
 						#CHECK - ANNOTATION DTB
 						fi
 						#============================================================================
@@ -692,7 +701,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 			 	#create report for each group of samples
 				#============================================================================
 				#CHECK - REPORT TYPE
-				if [ ${PROJECT_TYPE} != "germline" ] && [ ${PROJECT_TYPE} != "tumor" ] && [ ${PROJECT_TYPE} != "compare_independent" ]; then
+				if [ ${PROJECT_TYPE} != "germline" ] && [ ${PROJECT_TYPE} != "tumor" ] && [ ${PROJECT_TYPE} != "other" ]; then
 					echo -e ${COL1}${BEG}${COL2}
 					echo -e ${COL1}"◼︎ $(date)"${COL2}
 					echo -e ${COL1}"◼︎ cannot recognized type of the project to generate appropriate report"${COL2}
@@ -703,7 +712,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 
 				#CHECK - REPORT
 				if [ ${PROJECT_TYPE} == "germline" ] || [ ${PROJECT_TYPE} == "tumor" ]; then
-					if ! ls ${RESULTS_DATA_DIR}/${SAMPLE_1_TYPE}_${SAMPLE_1_ID}_${SAMPLE_1_SEX}"_SEGMENTS_PoN-"${PON_SEX}"_"${SEGMENTATIONCONDITIONS}"_REPORT.tsv" 1> /dev/null 2>&1; then 
+					if ! ls ${RESULTS_DATA_DIR}/${SAMPLE_1_TYPE}_${SAMPLE_1_ID}_${SAMPLE_1_SEX}"_SEGMENTS_C-"${N}"_PoN-"${PON_SEX}"_"${SEGMENTATIONCONDITIONS}"_REPORT.tsv" 1> /dev/null 2>&1; then 
 						echo -e ${COL1}${BEG}${COL2}
 						echo -e ${COL1}"◼︎ $(date)"${COL2}
 						echo -e ${COL1}"◼︎ "${MAIN_ID}" - "${SAMPLE_1_TYPE}" - "${SAMPLE_1_ID}": creating report, using PoN-"${PON_SEX}${COL2} 
@@ -713,21 +722,21 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 							${SAMPLE_1_TYPE}"_"${SAMPLE_1_ID} \
 							${SAMPLE_1_SEX} \
 							${PON_SEX_ID_SAMPLE1} \
-							${RESULTS_DATA_DIR}${SAMPLE_1_TYPE}"_"${SAMPLE_1_ID}"_"${SAMPLE_1_SEX}"_SEGMENTS_PoN-"${PON_SEX_ID_SAMPLE1}"_"${SEGMENTATIONCONDITIONS}".tsv" \
-							${RESULTS_DATA_DIR}${SAMPLE_1_TYPE}"_"${SAMPLE_1_ID}"_"${SAMPLE_1_SEX}"_denoisedCR_PoN-"${PON_SEX_ID_SAMPLE1}".tsv" \
+							${RESULTS_DATA_DIR}${SAMPLE_1_TYPE}"_"${SAMPLE_1_ID}"_"${SAMPLE_1_SEX}"_SEGMENTS_C-"${N}"_PoN-"${PON_SEX_ID_SAMPLE1}"_"${SEGMENTATIONCONDITIONS}".tsv" \
+							${RESULTS_DATA_DIR}${SAMPLE_1_TYPE}"_"${SAMPLE_1_ID}"_"${SAMPLE_1_SEX}"_denoisedCR_C-"${N}"_PoN-"${PON_SEX_ID_SAMPLE1}".tsv" \
 							${SAMPLE_2_TYPE}"_"${SAMPLE_2_ID} \
 							${SAMPLE_2_SEX} \
 							${PON_SEX_ID_SAMPLE2} \
-							${RESULTS_DATA_DIR}${SAMPLE_2_TYPE}"_"${SAMPLE_2_ID}"_"${SAMPLE_2_SEX}"_denoisedCR_PoN-"${PON_SEX_ID_SAMPLE2}".tsv" \
+							${RESULTS_DATA_DIR}${SAMPLE_2_TYPE}"_"${SAMPLE_2_ID}"_"${SAMPLE_2_SEX}"_denoisedCR_C-"${N}"_PoN-"${PON_SEX_ID_SAMPLE2}".tsv" \
 							${SAMPLE_3_TYPE}"_"${SAMPLE_3_ID} \
 							${SAMPLE_3_SEX} \
 							${PON_SEX_ID_SAMPLE3} \
-							${RESULTS_DATA_DIR}${SAMPLE_3_TYPE}"_"${SAMPLE_3_ID}"_"${SAMPLE_3_SEX}"_denoisedCR_PoN-"${PON_SEX_ID_SAMPLE3}".tsv" \
+							${RESULTS_DATA_DIR}${SAMPLE_3_TYPE}"_"${SAMPLE_3_ID}"_"${SAMPLE_3_SEX}"_denoisedCR_C-"${N}"_PoN-"${PON_SEX_ID_SAMPLE3}".tsv" \
 							${SEGM_MINGAIN} \
 							${SEGM_MINGAIN_SUB} \
 							${SEGM_MINLOSS} \
 							${SEGM_MINLOSS_SUB} \
-							${RESULTS_DATA_DIR}${SAMPLE_1_TYPE}_${SAMPLE_1_ID}_${SAMPLE_1_SEX}"_SEGMENTS_PoN-"${PON_SEX}"_"${SEGMENTATIONCONDITIONS}"_REPORT.tsv"
+							${RESULTS_DATA_DIR}${SAMPLE_1_TYPE}_${SAMPLE_1_ID}_${SAMPLE_1_SEX}"_SEGMENTS_C-"${N}"_PoN-"${PON_SEX}"_"${SEGMENTATIONCONDITIONS}"_REPORT.tsv"
 					#CHECK - REPORT
 					fi
 				fi
@@ -736,12 +745,16 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 			 	#create plots for each group of samples
 				#============================================================================
 				#CHECK - PLOTS
-				if ! ls ${RESULTS_PLOT_DIR}"/PoN-"${PON_SEX}"/"${MAIN_ID}"_genome_profile_"${SAMPLE_1_TYPE}"_"${SAMPLE_1_ID}"_"${SAMPLE_1_SEX}".png" 1> /dev/null 2>&1; then
-					mkdir -p ${RESULTS_PLOT_DIR}"/PoN-"${PON_SEX}"/detail/"
-					mkdir -p ${RESULTS_PLOT_DIR}"/PoN-"${PON_SEX}"/LOH/"
-					mkdir -p ${RESULTS_IGV_BED_DIR}"PoN-"${PON_SEX}"/"
+
+				RESULTS_PLOT_DIR=${RESULTS_DIR_GO}"plot_C-"${N}"_PoN-"${PON_SEX}"_"${SEGMENTATIONCONDITIONS}"/plot/"
+				RESULTS_IGV_BED_DIR=${RESULTS_DIR_GO}"plot_C-"${N}"_PoN-"${PON_SEX}"_"${SEGMENTATIONCONDITIONS}"/IGV/"
+
+				if ! ls ${RESULTS_PLOT_DIR}${MAIN_ID}"_genome_profile_"${SAMPLE_1_TYPE}"_"${SAMPLE_1_ID}"_"${SAMPLE_1_SEX}".png" 1> /dev/null 2>&1; then
+					mkdir -p ${RESULTS_PLOT_DIR}"/detail/"
+					mkdir -p ${RESULTS_PLOT_DIR}"/LOH/"
+					mkdir -p ${RESULTS_IGV_BED_DIR}
 					if ls ${R}"plot_CN_"${PROJECT_ID}".R" 1> /dev/null 2>&1; then
-						mkdir -p ${RESULTS_PLOT_DIR}"/PoN-"${PON_SEX}"/project_specific_regions/"
+						mkdir -p ${RESULTS_PLOT_DIR}"/project_specific_regions/"
 					fi
 					#Create plots for genome and all chromosomes
 					echo -e ${COL1}${BEG}${COL2}
@@ -755,6 +768,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 						${UCSC_CHROMOSOME_CENTROMERE} \
 						${DGV} \
 						${MAPPABILITY} \
+						${ENCODE_BLACK_LIST} \
 						${GENE_ANNOTATION_PROCESSED} \
 						${PROJECT_ID} \
 						${RESULTS_DATA_DIR} \
@@ -769,19 +783,20 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 						${SAMPLE_3_ID} \
 						${SAMPLE_3_TYPE} \
 						${SAMPLE_3_SEX} \
+						${N} \
 						${PON_SEX} \
-						${RESULTS_PLOT_DIR}"PoN-"${PON_SEX}"/" \
-						${RESULTS_IGV_BED_DIR}"PoN-"${PON_SEX}"/" \
+						${RESULTS_PLOT_DIR} \
+						${RESULTS_IGV_BED_DIR} \
 						${SEGMENTATIONCONDITIONS} \
 						${SEGM_MINLOSS} \
 						${SEGM_MINGAIN} \
 				        ${CTRL_CN_FILE} \
 				        ${R}"plot_CN_"${PROJECT_ID}".R"
-					if ls ${RESULTS_PLOT_DIR}"/PoN-"${PON_SEX}"/detail/"*HOM* 1> /dev/null 2>&1; then
-				    	mv ${RESULTS_PLOT_DIR}"/PoN-"${PON_SEX}"/detail/"*HOM* ${RESULTS_PLOT_DIR}"/PoN-"${PON_SEX}"/LOH/"
+					if ls ${RESULTS_PLOT_DIR}"/detail/"*HOM* 1> /dev/null 2>&1; then
+				    	mv ${RESULTS_PLOT_DIR}"/detail/"*HOM* ${RESULTS_PLOT_DIR}"/LOH/"
 					fi
-					if ls ${RESULTS_PLOT_DIR}"/PoN-"${PON_SEX}"/detail/"*OTHER* 1> /dev/null 2>&1; then
-				    	mv ${RESULTS_PLOT_DIR}"/PoN-"${PON_SEX}"/detail/"*OTHER* ${RESULTS_PLOT_DIR}"/PoN-"${PON_SEX}"/LOH/"
+					if ls ${RESULTS_PLOT_DIR}"/detail/"*OTHER* 1> /dev/null 2>&1; then
+				    	mv ${RESULTS_PLOT_DIR}"/detail/"*OTHER* ${RESULTS_PLOT_DIR}"/LOH/"
 					fi
 					#transform bedGraph to BigWig
 					echo -e ${COL1}${BEG}${COL2}
@@ -789,11 +804,11 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 					echo -e ${COL1}"◼︎ $MAIN_ID: transforming bedGraph to BigWig - using PoN "${PON_SEX}${COL2} 
 					echo -e ${COL1}${END}${COL2}
 					
-					for file in ${RESULTS_IGV_BED_DIR}"PoN-"${PON_SEX}/*"_SNP"; do
+					for file in ${RESULTS_IGV_BED_DIR}*"_SNP"; do
 						${BEDGRAPHTOBIGWIG} ${file} ${CONTIGS_SIZES} ${file}".bw"
 						rm ${file}
 					done
-					for file in ${RESULTS_IGV_BED_DIR}"PoN-"${PON_SEX}/*"_CN"; do
+					for file in ${RESULTS_IGV_BED_DIR}*"_CN"; do
 						${BEDGRAPHTOBIGWIG} ${file} ${CONTIGS_SIZES} ${file}".bw"
 						rm ${file}
 					done
@@ -826,7 +841,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 						# echo $line >> ${MASTERREGOFINT}"_temp.txt"
 					done
 
-					mkdir -p ${RESULTS_PLOT_DIR}"/PoN-"${PON_SEX}"/detail_regions_of_interest/"
+					mkdir -p ${RESULTS_PLOT_DIR}"/detail_regions_of_interest/"
 					
 					#Create plots for regions of interest
 					echo -e ${COL1}${BEG}${COL2}
@@ -841,6 +856,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 						${UCSC_CHROMOSOME_CENTROMERE} \
 						${DGV} \
 						${MAPPABILITY} \
+						${ENCODE_BLACK_LIST} \
 						${GENE_ANNOTATION_PROCESSED} \
 						${PROJECT_ID} \
 						${RESULTS_DATA_DIR} \
@@ -855,9 +871,10 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 						${SAMPLE_3_ID} \
 						${SAMPLE_3_TYPE} \
 						${SAMPLE_3_SEX} \
+						${N} \
 						${PON_SEX} \
-						${RESULTS_PLOT_DIR}"PoN-"${PON_SEX}"/" \
-						${RESULTS_IGV_BED_DIR}"PoN-"${PON_SEX}"/" \
+						${RESULTS_PLOT_DIR} \
+						${RESULTS_IGV_BED_DIR} \
 						${SEGMENTATIONCONDITIONS} \
 						${SEGM_MINLOSS} \
 						${SEGM_MINGAIN} \
