@@ -4,13 +4,13 @@
   <img src="https://github.com/AnetaMikulasova/CNVRobot/blob/main/CNVRobot_logo.png" alt="CNVRobot logo" width="200" height="207"/>
 </p>
 
-Welcome to CNVRobot v3.4!
+Welcome to CNVRobot v3.5!
 
 ## 1. Description
 CNVRobot is an integrated pipeline designed to detect rare germline and somatic copy-number variants (CNVs) and loss of heterozygosity (LOH) regions in the human genome using short-read DNA sequencing from any NGS platform, including targeted sequencing (TS), whole-exome sequencing (WES) and whole-genome sequencing (WGS). It integrates sequencing depth with SNP zygosity across the genome, incorporates advanced data denoising, segmentation and variant prioritization options, as well as detailed visualization for manual inspection of detected CNVs.
 
 ## 2. Download
-Code, databases and example data can be downloaded here: [CNVRobot_v3.4.zip](https://newcastle-my.sharepoint.com/:u:/g/personal/nam320_newcastle_ac_uk/EU0_i8sx3tJHg-o1H3j3_GcBK5Hqo8gctKAp4KURQwzZMg)
+Code, databases and example data can be downloaded here: [CNVRobot_v3.5.zip](https://newcastle-my.sharepoint.com/:u:/g/personal/nam320_newcastle_ac_uk/EfFAXdexqfxCkR3-c4hmf5UBKTJiqLzxjtfFUxC-SjgpVw)
 
 ## 3. Dependencies (License)
 - [GATK v4.2+](https://github.com/broadinstitute/gatk/releases) (Apache License 2.0)
@@ -90,10 +90,10 @@ Columns:
   - ```yes``` - project will be executed
   - ```no``` - project will not be executed
 - ```PROJECT_ID``` - short and unique identifier for the project
-- ```PROJECT_TYPE``` **(!)** - ```germline```, ```tumor```, ```compare_independent``` - important value for variants origin prediction in the final report
+- ```PROJECT_TYPE``` **(!)** - ```germline```, ```tumor```, ```other``` - important value for variants origin prediction in the final report; also used to define abnormal segments smoothing during segmentation
   - ```germline``` - final report is generated for pedigree project as heredity prediction; sample 1 is a proband and samples 2 and 3 are parents (works also if only one parent is available)
   - ```tumor``` - final report is generated for cancer project as germline/somatic prediction (paired germline has to available)
-  - ```compare_independent``` - no report is generated; anything else 
+  - ```other``` - no report is generated; anything else 
 - ```SEQ_TYPE``` **(!)** - ```WGS```, ```WES``` , ```TS``` - type of the sequencing capture
   - ```WGS``` - whole genome sequencing
   - ```WES``` - whole exome sequencing
@@ -351,7 +351,8 @@ Customized R scripts is required, as provided example. This script has to be pla
   - [Database of Genomic Variants (DGV, TCAG) v2020-02-25](http://dgv.tcag.ca/dgv/app/home)
   - [UCSC chromosome bands and centromeres](https://hgdownload.soe.ucsc.edu/downloads.html)
   - [RefSeq](https://genome.ucsc.edu/cgi-bin/hgTables)
-
+  - Mappability [GRCh37/hg19](https://genome.ucsc.edu/cgi-bin/hgFileUi?db=hg19&g=wgEncodeMapability) [GRCh38/hg38](https://genome.ucsc.edu/cgi-bin/hgTrackUi?db=hg38&g=mappability)
+  - [ENCODE black list](https://hgdownload.soe.ucsc.edu/downloads.html) (GRCh38/hg38 prepared by liftover from GRCh37/hg19, unlifted regions excluded)
 
 ## 15. Limitations
 CNVRobot pipeline is not suitable for detection of common population CNVs and CNVs in low mappability regions. It should be noted that it is a depth of coverage analysis within certains bins and so starts and ends of abnormalities are not precisily mapped. CNVRobot can detect only unbalanced changes. Similarly to DNA microarrays, coverage-based analysis can be problematic if the ploidy of the sample is changed, as it is based on median centering normalization.
