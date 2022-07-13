@@ -32,7 +32,7 @@ for (file in files_denois) {
      WORK = select(POSITIONS,POSITION) %>%
        mutate(x = vlookup(POSITION, dict = FILE, lookup_column = 5, result_column = 4))
      names(WORK) = c("POSITION", NAME) 
-     WORK = WORK %>% select(NAME)
+     WORK = WORK %>% select(all_of(NAME))
     
     DATASET = cbind(DATASET, WORK)
 }
@@ -40,6 +40,8 @@ for (file in files_denois) {
 
 message("   R ... ", paste0(date(), " writing output"))
 saveRDS(DATASET, file = paste0(OUT))
+
+system(paste0("touch status_ok"))
 
 
 

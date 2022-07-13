@@ -5,17 +5,18 @@ suppressPackageStartupMessages(library(expss))  #vlookup
 
 GNOMAD_FILTERED     = args[1] %>% as.character()
 FILES               = args[2] %>% as.character()
-GNOMAD_OUT          = args[3] %>% as.character()
-AFDIF               = args[4] %>% as.numeric()
-AFDEPTH             = args[5] %>% as.numeric()
-AFPERC              = args[6] %>% as.numeric()
-N                   = args[7] %>% as.numeric()
+PATTERN             = args[3] %>% as.character()
+GNOMAD_OUT          = args[4] %>% as.character()
+AFDIF               = args[5] %>% as.numeric()
+AFDEPTH             = args[6] %>% as.numeric()
+AFPERC              = args[7] %>% as.numeric()
+N                   = args[8] %>% as.numeric()
 
 
 message(paste0("   R ... ", date(), " - STAGE 1/5 - loading data"))
 
 #get maf data 
-files_maf          <- list.files(FILES, recursive = T, full.names = T, pattern = ".rds")
+files_maf          <- list.files(FILES, recursive = T, full.names = T, pattern = PATTERN)
 
 #get filtered (for capture) gnomad
 GNOMAD = read.delim(GNOMAD_FILTERED, comment.char = "#", head=FALSE, stringsAsFactors = F)
@@ -83,3 +84,4 @@ message(paste0("   R ... ", date(), " - STAGE 5/5 - writing output"))
 #output for filtering gnomad 
 write_tsv(GNOMAD, paste0(GNOMAD_OUT), col_names = F)
 
+system(paste0("touch status_ok"))

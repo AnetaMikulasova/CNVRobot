@@ -790,4 +790,6 @@ write_tsv(RESULTS, QCTABLEIN, col_names = T)
 
 message(paste0("   R ... ", date(), " - FINISHED"))
 
+system(paste0("touch status_ok"))
+
 

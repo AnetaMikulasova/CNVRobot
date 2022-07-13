@@ -51,6 +51,16 @@ MAPPABILITY_DTB = readRDS(GET_MAPPABILITY_DTB)
 #load ENCODE blacklist
 ENCODE_BLACKLIST = read.delim(paste0(GET_ENCODE_BLACKLIST), header=TRUE, stringsAsFactors = F)
 
+#remove "chr" if not present in sample file
+CONTIGS_in_SAMPLE=ORIG_FILE_INPUT$CONTIG %>% unique()
+if (("TRUE" %in% grepl("chr", CONTIGS_in_SAMPLE))==FALSE) {
+  DTB_DGVDATA$CONTIG = gsub("chr", "", DTB_DGVDATA$CONTIG)
+  GENES_DTB_PROCESSED$CONTIG = gsub("chr", "", GENES_DTB_PROCESSED$CONTIG)
+  MAPPABILITY_DTB$CONTIG = gsub("chr", "", MAPPABILITY_DTB$CONTIG)
+  ENCODE_BLACKLIST$CONTIG = gsub("chr", "", ENCODE_BLACKLIST$CONTIG)
+}
+
+
 #Functions
 #----------------------------------------------------------------------------------------------------------------------
 rowShift <- function(x, shiftLen = 1L) {
@@ -212,30 +222,29 @@ for(line in 1:nrow(SEGMENTATION_TO_ANNOTATE)) {
   
   # DGV
     #---------------------------------------------------------
-    
     SEGM_SIZE = SEGMENT_END - SEGMENT_START + 1
     
-  DTB_DGV_DATA_PROCESSED_AROUND = DTB_DGVDATA %>% 
-    filter((CONTIG == SEGMENT_CONTIG) & (START >= (SEGMENT_START - SEGM_SIZE)) & (END <= (SEGMENT_END + SEGM_SIZE))) %>%
-    filter((START <= SEGMENT_END) & (END >= SEGMENT_START)) %>%
-    filter(SIZE <= (SEGM_SIZE + (SEGM_SIZE*0.5)) & SIZE >= (SEGM_SIZE - (SEGM_SIZE*0.5)))
+    DTB_DGV_DATA_PROCESSED_AROUND = DTB_DGVDATA %>% 
+      filter((CONTIG == SEGMENT_CONTIG) & (START >= (SEGMENT_START - SEGM_SIZE)) & (END <= (SEGMENT_END + SEGM_SIZE))) %>%
+      filter((START <= SEGMENT_END) & (END >= SEGMENT_START)) %>%
+      filter(SIZE <= (SEGM_SIZE + (SEGM_SIZE*0.5)) & SIZE >= (SEGM_SIZE - (SEGM_SIZE*0.5)))
+    
+    DGV_NofLOSS_AROUND = filter(DTB_DGV_DATA_PROCESSED_AROUND, TYPE == "LOSS" | TYPE == "COMPLEX")
+    DGV_NofLOSS_AROUND = DGV_NofLOSS_AROUND$TYPE %>% as.vector()
+    DGV_NofLOSS_AROUND = length(DGV_NofLOSS_AROUND) #/ (SEGM_SIZE/1000)
+    DGV_NofGAIN_AROUND = filter(DTB_DGV_DATA_PROCESSED_AROUND, TYPE == "GAIN" | TYPE == "COMPLEX")
+    DGV_NofGAIN_AROUND = DGV_NofGAIN_AROUND$TYPE %>% as.vector()
+    DGV_NofGAIN_AROUND = length(DGV_NofGAIN_AROUND) #/ (SEGM_SIZE/1000)
+    
+    if(SEGMENT_TYPE == "GAIN" | SEGMENT_TYPE == "subGAIN") {
+      if(DGV_NofGAIN_AROUND >= (GENERAL_CUT_OFF*100)) {DGV_PREDICTION = "high"}
+      if(DGV_NofGAIN_AROUND < (GENERAL_CUT_OFF*100)) {DGV_PREDICTION = "low"}
+    }
+    if(SEGMENT_TYPE == "LOSS" | SEGMENT_TYPE == "subLOSS") {
+      if(DGV_NofLOSS_AROUND >= (GENERAL_CUT_OFF*100)) {DGV_PREDICTION = "high"}
+      if(DGV_NofLOSS_AROUND < (GENERAL_CUT_OFF*100)) {DGV_PREDICTION = "low"}
+    }
   
-  DGV_NofLOSS_AROUND = filter(DTB_DGV_DATA_PROCESSED_AROUND, TYPE == "LOSS" | TYPE == "COMPLEX")
-  DGV_NofLOSS_AROUND = DGV_NofLOSS_AROUND$TYPE %>% as.vector()
-  DGV_NofLOSS_AROUND = length(DGV_NofLOSS_AROUND) #/ (SEGM_SIZE/1000)
-  DGV_NofGAIN_AROUND = filter(DTB_DGV_DATA_PROCESSED_AROUND, TYPE == "GAIN" | TYPE == "COMPLEX")
-  DGV_NofGAIN_AROUND = DGV_NofGAIN_AROUND$TYPE %>% as.vector()
-  DGV_NofGAIN_AROUND = length(DGV_NofGAIN_AROUND) #/ (SEGM_SIZE/1000)
-  
-  if(SEGMENT_TYPE == "GAIN" | SEGMENT_TYPE == "subGAIN") {
-    if(DGV_NofGAIN_AROUND >= (GENERAL_CUT_OFF*100)) {DGV_PREDICTION = "high"}
-    if(DGV_NofGAIN_AROUND < (GENERAL_CUT_OFF*100)) {DGV_PREDICTION = "low"}
-  }
-  if(SEGMENT_TYPE == "LOSS" | SEGMENT_TYPE == "subLOSS") {
-    if(DGV_NofLOSS_AROUND >= (GENERAL_CUT_OFF*100)) {DGV_PREDICTION = "high"}
-    if(DGV_NofLOSS_AROUND < (GENERAL_CUT_OFF*100)) {DGV_PREDICTION = "low"}
-  }
-
     
     #mappability
     MAPPABILITY_TEMP = MAPPABILITY_DTB %>%
@@ -255,35 +264,33 @@ for(line in 1:nrow(SEGMENTATION_TO_ANNOTATE)) {
     # if(MAPPABILITY < 0.5) {MAPPABILITY_PREDICTION = "low"}
     
     if(MAPPABILITY >= (1-GENERAL_CUT_OFF)) {MAPPABILITY_PREDICTION = "high"} else {MAPPABILITY_PREDICTION = "low"}
-    
-    
+
+
     #ENCODE black list
-    SEGM_SIZE = SEGMENT_END - SEGMENT_START + 1
-    
-    ENCODE_BLACKLIST_TEMP = ENCODE_BLACKLIST %>%
-      filter(CONTIG == SEGMENT_CONTIG) %>% 
-      filter(START <= SEGMENT_END) %>% 
-      filter(END >= SEGMENT_START) 
-    
-    if(nrow(ENCODE_BLACKLIST_TEMP) == 0) {
-      ENCODE_BLACKLIST_OVERLAP=0
-      ENCODE_BLACKLIST_PREDICTION="no"
-    }
-    
-    if(nrow(ENCODE_BLACKLIST_TEMP) > 0) {
-      ENCODE_BLACKLIST_TEMP = ENCODE_BLACKLIST_TEMP%>%
-        mutate(START = ifelse(START < SEGMENT_START, SEGMENT_START, START)) %>%
-        mutate(END = ifelse(END > SEGMENT_END, SEGMENT_END, END)) %>%
-        mutate(SIZE = END - START + 1)
+      SEGM_SIZE = SEGMENT_END - SEGMENT_START + 1
       
-      ENCODE_BLACKLIST_OVERLAP=sum(ENCODE_BLACKLIST_TEMP$SIZE)/SEGM_SIZE
-      if(ENCODE_BLACKLIST_OVERLAP >= GENERAL_CUT_OFF) {ENCODE_BLACKLIST_PREDICTION="yes"}
-      if(ENCODE_BLACKLIST_OVERLAP < GENERAL_CUT_OFF) {ENCODE_BLACKLIST_PREDICTION="no"}
+      ENCODE_BLACKLIST_TEMP = ENCODE_BLACKLIST %>%
+        filter(CONTIG == SEGMENT_CONTIG) %>% 
+        filter(START <= SEGMENT_END) %>% 
+        filter(END >= SEGMENT_START) 
       
-    }
-    
-    
-    
+      if(nrow(ENCODE_BLACKLIST_TEMP) == 0) {
+        ENCODE_BLACKLIST_OVERLAP=0
+        ENCODE_BLACKLIST_PREDICTION="no"
+      }
+      
+      if(nrow(ENCODE_BLACKLIST_TEMP) > 0) {
+        ENCODE_BLACKLIST_TEMP = ENCODE_BLACKLIST_TEMP%>%
+          mutate(START = ifelse(START < SEGMENT_START, SEGMENT_START, START)) %>%
+          mutate(END = ifelse(END > SEGMENT_END, SEGMENT_END, END)) %>%
+          mutate(SIZE = END - START + 1)
+        
+        ENCODE_BLACKLIST_OVERLAP=sum(ENCODE_BLACKLIST_TEMP$SIZE)/SEGM_SIZE
+        if(ENCODE_BLACKLIST_OVERLAP >= GENERAL_CUT_OFF) {ENCODE_BLACKLIST_PREDICTION="yes"}
+        if(ENCODE_BLACKLIST_OVERLAP < GENERAL_CUT_OFF) {ENCODE_BLACKLIST_PREDICTION="no"}
+        
+      }
+
   #---------------------------------------------------------
   
   x = data.frame(CTRL_N, CTRL_TYPE, CTRL_NA_FRACTION, CTRL_NOISE_PREDICTION, CTRL_FofGAIN, CTRL_FofLOSS, CTRL_CNV_PREDICTION, DGV_NofGAIN_AROUND, DGV_NofLOSS_AROUND, DGV_PREDICTION, MAPPABILITY, MAPPABILITY_PREDICTION, ENCODE_BLACKLIST_OVERLAP, ENCODE_BLACKLIST_PREDICTION)
@@ -347,5 +354,7 @@ SEGMENTATION = SEGMENTATION %>% select(-c("N"))
 write_tsv(SEGMENTATION, paste0(OUTPUT), col_names = T)
 
 message(paste0("   R ... ", date(), " - FINISHED"))
+
+system(paste0("touch status_ok"))
 
 

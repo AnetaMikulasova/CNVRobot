@@ -21,5 +21,4 @@ REF_FAI = REF_FAI %>%
   select(V1, V3, V2)
 write_tsv(REF_FAI, paste0(GET_OUTPUT_CONTIG), col_names = F) #replace the chromosome size file
 
-
-
+system(paste0("touch status_ok"))

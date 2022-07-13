@@ -207,7 +207,10 @@ for (REG in (LISTofREGIONS)) {
     plot.params$data1height=180
     plot.params$data2height=220}
   
-  kp <- plotKaryotype(genome=ASSEMBLY,
+  CUSTOM_CYTOBAND = DTB_CHROMBAND %>% filter(chr == CHR)
+  CUSTOM_CYTOBAND  = toGRanges(CUSTOM_CYTOBAND)
+  
+  kp <- plotKaryotype(genome=CUSTOM_GENOME, cytobands = CUSTOM_CYTOBAND,
                       chromosomes = CHR,
                       plot.type = 2,
                       plot.params = plot.params,
@@ -245,10 +248,12 @@ for (REG in (LISTofREGIONS)) {
   
   
   #BUILD DGV DATABASE
-  #DGV DATABASE - part 1 of data.panel 2 with selfdenoising data - only gain/loss/clx and different values
-  GAINCHART = DGV_CHART(DTB_DGV_GAIN, 0.01, 0.3, rgb(84, 130, 53, max = 255, alpha = 50))
-  LOSSCHART = DGV_CHART(DTB_DGV_LOSS, 0.31, 0.6, rgb(192, 0, 0, max = 255, alpha = 50))
-  COMPLEXCHART = DGV_CHART(DTB_DGV_COMPLEX, 0.61, 0.9, rgb(123, 35, 170, max = 255, alpha = 50))
+  if(file.exists(DGV)) {
+    #DGV DATABASE - part 1 of data.panel 2 with selfdenoising data - only gain/loss/clx and different values
+    GAINCHART = DGV_CHART(DTB_DGV_GAIN, 0.01, 0.3, rgb(84, 130, 53, max = 255, alpha = 50))
+    LOSSCHART = DGV_CHART(DTB_DGV_LOSS, 0.31, 0.6, rgb(192, 0, 0, max = 255, alpha = 50))
+    COMPLEXCHART = DGV_CHART(DTB_DGV_COMPLEX, 0.61, 0.9, rgb(123, 35, 170, max = 255, alpha = 50))
+  }
   
   #BUILD MAPPABILITY
   kpBars(kp, data.panel=2, chr=MAPPABILITY$CONTIG, x0=MAPPABILITY$START, x1=MAPPABILITY$END, y1=MAPPABILITY$VALUE, r0=0.44, r1=0.35, col="black")

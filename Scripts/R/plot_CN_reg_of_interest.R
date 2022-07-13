@@ -16,8 +16,8 @@ suppressPackageStartupMessages(library(splitstackshape))
 # https://www.statmethods.net/advgraphs/parameters.html
 
 GETCAPTURE          = args[1] %>% as.character()
-ASSEMBLY            = args[2] %>% as.character()
-CHROMSIZE           = args[3] %>% as.character()
+CHROMSIZE           = args[2] %>% as.character()
+CHROMBAND           = args[3] %>% as.character()
 CENTROMERE          = args[4] %>% as.character()
 DGV                 = args[5] %>% as.character()
 GET_MAPPABILITY_DTB = args[6] %>% as.character()
@@ -45,15 +45,15 @@ MINLOSS  = args[27] %>% as.numeric()
 MINGAIN  = args[28] %>% as.numeric()
 GET_CTRL_CN              = args[29] %>% as.character()
 # PLOT_PROJECT_SOURCE = args[30] %>% as.character()
-REGIONS_TABLE       = args[31] %>% as.character()
+# DETAIL_PLOT_SKIP = args[31] %>% as.character()
+REGIONS_TABLE       = args[32] %>% as.character()
   
 message(paste0("   R ... ", date(), " - STAGE 1/3 - loading and processing databases"))
 
 #Get ctrl CN file
 if(file.exists(GET_CTRL_CN)==T) {
   #get data
-  CTRL_CN = readRDS(GET_CTRL_CN) %>%
-    mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG)))
+  CTRL_CN = readRDS(GET_CTRL_CN)
   #exclude relative controls from dataset
   CTRL_CN_POS = select(CTRL_CN, c(1:3))
   CTRL_CN_DATA = select(CTRL_CN, matches("denoisedCR"))
@@ -88,16 +88,31 @@ if(file.exists(GET_CTRL_CN)==T) {
 #Get chromosome sizes to generate size of final figure of the chromosome
 DTB_CHRSIZE = read.delim(CHROMSIZE, header = FALSE, stringsAsFactors = F)
 names(DTB_CHRSIZE) = c("CONTIG", "SIZE")
-DTB_CHRSIZE = DTB_CHRSIZE %>% mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG)))
+DTB_CHRSIZE = DTB_CHRSIZE
 DTB_CHRSIZE$SIZE= as.numeric(as.integer(DTB_CHRSIZE$SIZE))
+#order as chr1, chr2, chr3...Y or 1, 2, 3...Y (if not genome view can get strange orders)
+DTB_CHRSIZE= DTB_CHRSIZE %>%
+  mutate(contig_temp = gsub("chr", "", DTB_CHRSIZE$CONTIG)) %>%
+  mutate(contig_temp = ifelse(contig_temp == "X", 23, contig_temp)) %>%
+  mutate(contig_temp = ifelse(contig_temp == "Y", 24, contig_temp)) %>%
+  mutate(contig_temp = as.integer(contig_temp)) %>%
+  arrange(contig_temp) %>%
+  select(CONTIG, SIZE)
+CONTIGS_in_SAMPLE=DTB_CHRSIZE$CONTIG %>% unique()
 
+#Get chromosome cytobands
+DTB_CHROMBAND = read.delim(CHROMBAND, header = FALSE, stringsAsFactors = F) %>% mutate(V2 = V2 + 1)
+names(DTB_CHROMBAND) = c("chr", "start", "end", "name", "gieStain")
+DTB_CHROMBAND = DTB_CHROMBAND
+
+#Use chromosome sizes for defining the custom genome
+CUSTOM_GENOME = toGRanges(data.frame(chr=DTB_CHRSIZE$CONTIG, start=1, end=DTB_CHRSIZE$SIZE))
 
 #Get capture
 if(file.exists(GETCAPTURE)) {
   DTB_CAPTURE = read.delim(GETCAPTURE, header = FALSE, stringsAsFactors = F) %>% select(V1, V2, V3)
   names(DTB_CAPTURE) = c("CONTIG",  "START", "END")
   DTB_CAPTURE = DTB_CAPTURE %>%
-                mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG))) %>%
                 filter(CONTIG != "chrMT") %>%
                 mutate(STARText1 = START-10000, ENDext1 = END+10000) %>%
                 mutate(STARText2 = START-7000, ENDext2 = END+7000) %>%
@@ -111,14 +126,18 @@ if(file.exists(GETCAPTURE)) {
 #Get chromosome centromeres
 DTB_CENTROMERE = read.delim(CENTROMERE, header = FALSE, stringsAsFactors = F)
 names(DTB_CENTROMERE) = c("CONTIG", "POSITION")
-DTB_CENTROMERE = DTB_CENTROMERE %>% mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG)))
+DTB_CENTROMERE = DTB_CENTROMERE
 DTB_CENTROMERE_temp = DTB_CENTROMERE %>% mutate(POSITION2 = POSITION) 
 names(DTB_CENTROMERE_temp) = c("seqnames", "start", "end")
 DTB_CENTROMERE = cbind(DTB_CENTROMERE_temp, DTB_CENTROMERE) %>% toGRanges()
 remove(DTB_CENTROMERE_temp)
 
 #Get DGV
-DTB_DGVDATA = readRDS(DGV) %>% mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG)))
+DTB_DGVDATA = readRDS(DGV)
+#remove "chr" if not present in sample file
+if (("TRUE" %in% grepl("chr", CONTIGS_in_SAMPLE))==FALSE) {
+  DTB_DGVDATA$CONTIG = gsub("chr", "", DTB_DGVDATA$CONTIG)
+}
 DTB_DGVDATA_temp = DTB_DGVDATA %>% select(CONTIG, START, END) 
 names(DTB_DGVDATA_temp) = c("seqnames", "start", "end")
 DTB_DGVDATA = cbind(DTB_DGVDATA_temp, DTB_DGVDATA)
@@ -127,27 +146,27 @@ DTB_DGV_GAIN = filter(DTB_DGVDATA, TYPE == "GAIN") %>% toGRanges()
 DTB_DGV_COMPLEX = filter(DTB_DGVDATA, TYPE == "COMPLEX") %>% toGRanges()
 remove(DTB_DGVDATA, DTB_DGVDATA_temp)
 
-# #Get gnomAD structure database
-# DTB_GNOMADSV = readRDS(GNOMADSV) %>% mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG)))
-# DTB_GNOMADSV_temp = DTB_GNOMADSV %>% select(CONTIG, START, END)
-# names(DTB_GNOMADSV_temp) = c("seqnames", "start", "end")
-# DTB_GNOMADSV = cbind(DTB_GNOMADSV_temp, DTB_GNOMADSV)
-# DTB_GNOMADSV_LOSS = filter(DTB_GNOMADSV, TYPE == "DEL") %>% toGRanges()
-# DTB_GNOMADSV_GAIN = filter(DTB_GNOMADSV, TYPE == "DUP") %>% toGRanges()
-# DTB_GNOMADSV_COMPLEX = filter(DTB_GNOMADSV, TYPE == "CPX") %>% toGRanges()
-# remove(DTB_GNOMADSV, DTB_GNOMADSV_temp)
-
 #load mappability dtb
-MAPPABILITY = readRDS(GET_MAPPABILITY_DTB) %>%
-  mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG)))
+MAPPABILITY = readRDS(GET_MAPPABILITY_DTB)
 
 #load ENCODE blacklist
-ENCODE_BLACKLIST = read.delim(paste0(GET_ENCODE_BLACKLIST), header=TRUE, stringsAsFactors = F) %>%
-  mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG)))
+ENCODE_BLACKLIST = read.delim(paste0(GET_ENCODE_BLACKLIST), header=TRUE, stringsAsFactors = F)
 
 #Get processed gene database
 DTB_GENES_DTB_PROCESSED  = read.delim(GENES_DTB_PROCESSED, header = TRUE, stringsAsFactors = F)
 
+#remove "chr" if not present in sample file
+if (("TRUE" %in% grepl("chr", CONTIGS_in_SAMPLE))==FALSE) {
+  MAPPABILITY$CONTIG = gsub("chr", "", MAPPABILITY$CONTIG)
+  ENCODE_BLACKLIST$CONTIG = gsub("chr", "", ENCODE_BLACKLIST$CONTIG)
+  DTB_GENES_DTB_PROCESSED$CONTIG = gsub("chr", "", DTB_GENES_DTB_PROCESSED$CONTIG)
+}
+
+#define odd contigs (for coloring contigs in genome plot)
+CONTIG_ODD=c(seq(1, 22, 2), "X")
+CONTIG_ODD = c(CONTIG_ODD, as.vector(outer("chr", CONTIG_ODD, paste, sep="")))
+
+if(is.na(DETAIL_PLOT_SKIP)) {DETAIL_PLOT_SKIP="none"}
 
 message(paste0("   R ... ", date(), " - STAGE 2/3 - loading samples data"))
 
@@ -165,24 +184,23 @@ for (i in list(paste0(SAMPLE1_TYPE, "_", SAMPLE1_ID, "_", SAMPLE1_SEX), paste0(S
   
   if(file.exists(paste0(INDIR, i, "_SEGMENTS_C-", CTRL_N, "_", PON, "_", GETSEGMENTCONDITION, "_segmentation.tsv"))) {
 
-    MODEL <- read.delim(paste0(INDIR, i, "_SEGMENTS_C-", CTRL_N, "_", PON, "_", GETSEGMENTCONDITION, "_segmentation.tsv"), stringsAsFactors = F) %>% mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG))) %>%
+    MODEL <- read.delim(paste0(INDIR, i, "_SEGMENTS_C-", CTRL_N, "_", PON, "_", GETSEGMENTCONDITION, "_segmentation.tsv"), stringsAsFactors = F) %>% 
       # filter(FILTER == "PASS") %>%
       filter(TYPE == "NORMAL" | TYPE == "LOSS" | TYPE == "GAIN" | TYPE == "subLOSS" | TYPE == "subGAIN") %>%
       mutate(COLOR = "#000000") %>%
       mutate(COLOR = ifelse(TYPE == "LOSS", "#C02600", COLOR)) %>%
       mutate(COLOR = ifelse(TYPE == "GAIN", "#006200", COLOR))
  
-    MODEL_LOH <- read.delim(paste0(INDIR, i, "_SEGMENTS_C-", CTRL_N, "_", PON, "_", GETSEGMENTCONDITION, "_segmentation.tsv"), stringsAsFactors = F)%>% mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG))) %>%
+    MODEL_LOH <- read.delim(paste0(INDIR, i, "_SEGMENTS_C-", CTRL_N, "_", PON, "_", GETSEGMENTCONDITION, "_segmentation.tsv"), stringsAsFactors = F) %>% 
       # filter(FILTER == "PASS") %>%
       filter(TYPE == "HOM" | TYPE == "HET" | TYPE == "OTHER") %>%
       mutate(COLOR = ifelse(TYPE == "HOM", "#B0C0E2", "#DBE3F1"))
 
     # #bed file for IGV with abnormal segments
-    # IGV_MODEL <- read.delim(paste0(INDIR, i, "_SEGMENTS_C-", CTRL_N, "_", PON, "_", GETSEGMENTCONDITION, "_segmentation.tsv"), stringsAsFactors = F) %>% #mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG))) %>%
-    #   filter(FILTER == "PASS") %>%
-    #   select(CONTIG, START, END, TYPE) %>% 
+    # IGV_MODEL <- read.delim(paste0(INDIR, i, "_SEGMENTS_C-", CTRL_N, "_", PON, "_", GETSEGMENTCONDITION, "_segmentation.tsv"), stringsAsFactors = F) %>% 
+    #   # filter(FILTER == "PASS") %>%
+    #   select(CONTIG, START, END, TYPE, MEAN_L2R_EDIT) %>%
     #   mutate(START = START-1) %>%
-    #   filter(TYPE != "NORMAL") %>%
     #   mutate(x1 = ".") %>%
     #   mutate(x2 = ".") %>%
     #   mutate(START2 = START) %>%
@@ -194,19 +212,26 @@ for (i in list(paste0(SAMPLE1_TYPE, "_", SAMPLE1_ID, "_", SAMPLE1_SEX), paste0(S
     #   mutate(COLOR = ifelse(TYPE == "subLOSS", "255,172,168", COLOR)) %>%
     #   mutate(COLOR = ifelse(TYPE == "subGAIN", "168,211,121", COLOR)) %>%
     #   arrange(CONTIG, START, END)
-    #   
+    # 
+    # IGV_MODEL_BED = IGV_MODEL %>% 
+    #   filter(TYPE != "NORMAL") %>%
+    #   select(CONTIG, START, END, TYPE, x1, x2, START2, END2, COLOR)
     # write_tsv(IGV_MODEL, paste0(OUTDIR_IGV, GROUP, "_", i, "_abnormal_segments.bed"), col_names = F)
+    # 
+    # IGV_MODEL_WIG = IGV_MODEL %>% 
+    #   filter(TYPE != "HOM") %>%
+    #   filter(TYPE != "OTHER") %>%
+    #   select(CONTIG, START, END, MEAN_L2R_EDIT)
+    # write_tsv(IGV_MODEL_WIG, paste0(OUTDIR_IGV, GROUP, "_", i, "_segments"), col_names = F)
     
     DENOIS  <-  read.delim(paste0(INDIR, i, "_denoisedCR_C-", CTRL_N, "_", PON, ".tsv"), comment.char = "@", stringsAsFactors = F) %>%
-      mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG))) %>%
       mutate(COLOR = "#A6A6A6") %>%
       # mutate(COLOR = ifelse(LOG2_COPY_RATIO < -0.9, "#FF7100", COLOR)) %>%
       # mutate(COLOR = ifelse(LOG2_COPY_RATIO < -1.5, "#FF2600", COLOR)) %>%
       # mutate(COLOR = ifelse(LOG2_COPY_RATIO > 0.65, "#008F00", COLOR)) %>%
       # mutate(COLOR = ifelse(LOG2_COPY_RATIO > 1.00, "#47AFEB", COLOR)) %>%
       mutate(COLOLCONTIG = ".") %>%
-      # mutate(COLOLCONTIG = ifelse(CONTIG == "chr1" | CONTIG == "chr3" | CONTIG == "chr5" | CONTIG == "chr7" | CONTIG == "chr9" | CONTIG == "chr11" | CONTIG == "chr13" | CONTIG == "chr15" | CONTIG == "chr17" | CONTIG == "chr19" | CONTIG == "chr21" | CONTIG == "chrX", "#941100", "#011893")) %>%
-      mutate(COLOLCONTIG = ifelse(CONTIG == "chr1" | CONTIG == "chr3" | CONTIG == "chr5" | CONTIG == "chr7" | CONTIG == "chr9" | CONTIG == "chr11" | CONTIG == "chr13" | CONTIG == "chr15" | CONTIG == "chr17" | CONTIG == "chr19" | CONTIG == "chr21" | CONTIG == "chrX", "#FEB49B", "#9BC2E6")) %>%
+      mutate(COLOLCONTIG = ifelse(CONTIG %in% CONTIG_ODD, "#FEB49B", "#9BC2E6")) %>%
       mutate(L2R = ifelse(LOG2_COPY_RATIO < -2.25, -2.25, LOG2_COPY_RATIO)) %>%
       mutate(L2R = ifelse(LOG2_COPY_RATIO > 2.25, 2.25, L2R)) %>%
       mutate(COLORABN = COLOR)
@@ -253,11 +278,9 @@ for (i in list(paste0(SAMPLE1_TYPE, "_", SAMPLE1_ID, "_", SAMPLE1_SEX), paste0(S
     #   arrange(CONTIG, START, END)
     # write_tsv(IGV_DENOIS, paste0(OUTDIR_IGV, GROUP, "_", i, "_CN"), col_names = F)
     
-    # ALL    <-   readRDS(paste0(INDIR, i, "_allelicCounts", GNOMAD_PATTERN, "_", PON, ".rds")) %>%
     ALL    <-   readRDS(paste0(INDIR, i, "_allelicCounts", GNOMAD_PATTERN, ".rds")) %>%
       mutate(N = REF_COUNT + ALT_COUNT) %>%
-      filter(N > 2) %>%
-      mutate(CONTIG = ifelse(grepl("^chr*", CONTIG), CONTIG, paste0("chr", CONTIG)))
+      filter(N > 2)
     ALL = ALL %>%
       mutate(TEST = sample(1:2, nrow(ALL), replace = T)) %>%
       mutate(MAF = ifelse(TEST == 1, ALT_COUNT/N, REF_COUNT/N)) %>%
@@ -266,13 +289,11 @@ for (i in list(paste0(SAMPLE1_TYPE, "_", SAMPLE1_ID, "_", SAMPLE1_SEX), paste0(S
       mutate(COL = ifelse(MAF > 0.125 & MAF < 0.375, "#FF2600", COL)) %>%
       mutate(COL = ifelse(MAF > 0.625 & MAF < 0.875, "#FF2600", COL)) %>%
       mutate(COLOLCONTIG = ".") %>%
-      # mutate(COLOLCONTIG = ifelse(CONTIG == "chr1" | CONTIG == "chr3" | CONTIG == "chr5" | CONTIG == "chr7" | CONTIG == "chr9" | CONTIG == "chr11" | CONTIG == "chr13" | CONTIG == "chr15" | CONTIG == "chr17" | CONTIG == "chr19" | CONTIG == "chr21" | CONTIG == "chrX", "#941100", "#011893"))
-      mutate(COLOLCONTIG = ifelse(CONTIG == "chr1" | CONTIG == "chr3" | CONTIG == "chr5" | CONTIG == "chr7" | CONTIG == "chr9" | CONTIG == "chr11" | CONTIG == "chr13" | CONTIG == "chr15" | CONTIG == "chr17" | CONTIG == "chr19" | CONTIG == "chr21" | CONTIG == "chrX", "#FEB49B", "#9BC2E6"))
+      mutate(COLOLCONTIG = ifelse(CONTIG %in% CONTIG_ODD, "#FEB49B", "#9BC2E6"))
 
     ALL_FILTERED = ALL %>% sample_frac(0.5) %>% arrange(CONTIG, POSITION)
     
     #bedGraph file with denoised copy-number data
-    ## ALL_IGV <- readRDS(paste0(INDIR, i, "_allelicCounts", GNOMAD_PATTERN, "_", PON, ".rds"))
     # ALL_IGV <- readRDS(paste0(INDIR, i, "_allelicCounts", GNOMAD_PATTERN, ".rds")) %>%
     #   mutate(N = REF_COUNT + ALT_COUNT) %>%
     #   filter(N > 2)
@@ -612,8 +633,11 @@ for (ABN in (LISTofABNORM)) {
   if(PLOT_STYLE == "RUN_SINGLE") {
     plot.params$data1height=180
     plot.params$data2height=220}
-
-  kp <- plotKaryotype(genome=ASSEMBLY,
+  
+  CUSTOM_CYTOBAND = DTB_CHROMBAND %>% filter(chr == CHR)
+  CUSTOM_CYTOBAND  = toGRanges(CUSTOM_CYTOBAND)
+  
+  kp <- plotKaryotype(genome=CUSTOM_GENOME, cytobands = CUSTOM_CYTOBAND,
                       chromosomes = CHR,
                       plot.type = 2,
                       plot.params = plot.params,
@@ -655,17 +679,12 @@ for (ABN in (LISTofABNORM)) {
   LOSSCHART = DGV_CHART(DTB_DGV_LOSS, 0.31, 0.6, rgb(192, 0, 0, max = 255, alpha = 30))
   COMPLEXCHART = DGV_CHART(DTB_DGV_COMPLEX, 0.61, 0.9, rgb(123, 35, 170, max = 255, alpha = 30))
 
-  # #BUILD gnomAD SV DATABASE
-  # GAINCHART = GNOMADSV_CHART(DTB_GNOMADSV_GAIN, 0.01, 0.3, rgb(84, 130, 53, max = 255, alpha = 50))
-  # LOSSCHART = GNOMADSV_CHART(DTB_GNOMADSV_LOSS, 0.31, 0.6, rgb(192, 0, 0, max = 255, alpha = 50))
-  # COMPLEXCHART = GNOMADSV_CHART(DTB_GNOMADSV_COMPLEX, 0.61, 0.9, rgb(123, 35, 170, max = 255, alpha = 50))
-  
   #BUILD MAPPABILITY
   kpBars(kp, data.panel=2, chr=MAPPABILITY$CONTIG, x0=MAPPABILITY$START, x1=MAPPABILITY$END, y1=MAPPABILITY$VALUE, r0=0.44, r1=0.35, col="black")
   
   #BUILD ENCODE BLACKLIST
   kpRect(kp, data.panel=2, chr=ENCODE_BLACKLIST$CONTIG, x0=ENCODE_BLACKLIST$START, x1=ENCODE_BLACKLIST$END, y0=0, y1=1, r0=0.48, r1=0.46, col=rgb(130, 130, 130, max=255), border=NA)
-  
+
   if(file.exists(GET_CTRL_CN)==T) {
   #Add ctrl CN data itself
   kpRect(kp, data.panel=2, chr=CHR, x0=FROM, x1=TO, y0=0, y1=1, col=NA, r0=0.12, r1=0.02, border=NA)
@@ -675,7 +694,6 @@ for (ABN in (LISTofABNORM)) {
   kpRect(kp, data.panel=2, chr=CTRL_CN$CONTIG, x0=CTRL_CN$START, x1=CTRL_CN$END, y0=0, y1=CTRL_CN$FofGAIN, r0=0.12, r1=0.02, col=rgb(84, 130, 53, max = 255, alpha = 255), border=NA)
   kpRect(kp, data.panel=2, chr=CTRL_CN$CONTIG, x0=CTRL_CN$START, x1=CTRL_CN$END, y0=0, y1=CTRL_CN$FofLOSS, r0=0.13, r1=0.23, col=rgb(192, 0, 0, max = 255, alpha = 255), border=NA)
   }
-  
   
   #GENES_DTB_PROCESSED
   #transcription
@@ -703,7 +721,7 @@ options(warn = defaultW)
 
 message(paste0("   R ... ", date(), " - FINISHED"))
   
-  
+system(paste0("touch status_ok"))
   
   
 

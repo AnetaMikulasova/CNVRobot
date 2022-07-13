@@ -53,6 +53,8 @@ IGV_FofGAIN = CTRL_CN_PREP %>% select(CONTIG, START, END, FofGAIN) %>% filter(!i
 IGV_FofGAIN_OUTPUT = paste0(gsub(".tsv", "", OUTPUT), "_freqofgain")
 write_tsv(IGV_FofGAIN, IGV_FofGAIN_OUTPUT, col_names = F)
 
+system(paste0("touch status_ok"))
+
 
 
 

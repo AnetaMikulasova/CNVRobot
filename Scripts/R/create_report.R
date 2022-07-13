@@ -376,3 +376,4 @@ write_tsv(SEGMENTATION, paste0(OUTPUT), col_names = T)
   
 message(paste0("   R ... ", date(), " - FINISHED"))
 
+system(paste0("touch status_ok"))
