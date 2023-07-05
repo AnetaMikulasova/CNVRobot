@@ -217,7 +217,7 @@ for (i in list(paste0(SAMPLE1_TYPE, "_", SAMPLE1_ID, "_", SAMPLE1_SEX), paste0(S
     IGV_MODEL_BED = IGV_MODEL %>% 
       filter(TYPE != "NORMAL") %>%
       select(CONTIG, START, END, TYPE, x1, x2, START2, END2, COLOR)
-    write_tsv(IGV_MODEL, paste0(OUTDIR_IGV, GROUP, "_", i, "_abnormal_segments.bed"), col_names = F)
+    write_tsv(IGV_MODEL_BED, paste0(OUTDIR_IGV, GROUP, "_", i, "_abnormal_segments.bed"), col_names = F)
     
     IGV_MODEL_WIG = IGV_MODEL %>% 
       filter(TYPE != "HOM") %>%
