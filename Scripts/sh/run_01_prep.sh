@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source ${1}
+CHECKPOINTS=${2}
 
 echo -e ${COL1}${BEG}${COL2}
 echo -e ${COL1}"◼︎ $(date)"${COL2}
@@ -878,7 +879,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 					#test if filtered master sex is not empty
 					NofLINES=`cat ${MASTERSEX_FILTER} | wc -l`
 					if [[ $NofLINES == 0 ]]; then
-						echo -e ${COL1_INFO}"◼︎ CHECKPOINT ERROR - SEX TEST: could not find any setting defined in the sex master ("${MASTERSAMPLES}") to perform sex test"
+						echo -e ${COL1_INFO}"◼︎ CHECKPOINT ERROR - SEX TEST: could not find any setting defined in the sex master ("${MASTERSEX}") to perform sex test"
 						echo -e "   Project: "${PROJECT_ID}
 						echo -e "   Pattern that was looked for in the sex master file column PROJECT_ID: "${SEX_TEST_SETTING}
 						echo -e "   If you are trying to use custom setting for the sex test, make sure that the PROJECT_ID from the projects master is same as the PROJECT_ID within the sex master."
@@ -1170,6 +1171,15 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 				[ ${CTRL_PON_SEX_SELECT} == "F" ] && PON_SEX_PATTERN="F" && PON_SEX_ID="F"
 				[ ${CTRL_PON_SEX_SELECT} == "mixed" ] && PON_SEX_PATTERN="*" && PON_SEX_ID="mixed"
 				[ ${CTRL_PON_SEX_SELECT} == "matched" ] && PON_SEX_PATTERN=${CTRL_SEX} && PON_SEX_ID=${CTRL_SEX}
+				
+
+
+				# if ctrl sex is unk and select is matched, then / provide also info to ReadMe file
+				# [ ${CTRL_PON_SEX_SELECT} == "matched" ] & [ ${CTRL_SEX} == "unk" ] && PON_SEX_PATTERN="*" && PON_SEX_ID=${CTRL_SEX}
+
+
+
+
 
 				#generate list of hdf5 controls from controls master (list, add -I and delet newline \n)
 				if [ ${CTRL_PON_SEX_SELECT} == "mixed" ]; then
@@ -1410,7 +1420,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 				[ ${CTRL_PON_SEX_SELECT} == "M" ] && PON_SEX_PATTERN="_denoisedCR_PoN-M"
 				[ ${CTRL_PON_SEX_SELECT} == "F" ] && PON_SEX_PATTERN="_denoisedCR_PoN-F"
 				[ ${CTRL_PON_SEX_SELECT} == "mixed" ] && PON_SEX_PATTERN="_denoisedCR_PoN-mixed"
-				[ ${CTRL_PON_SEX_SELECT} == "matched" ] && PON_SEX_PATTERN="M_denoisedCR_PoN-M|F_denoisedCR_PoN-F"
+				[ ${CTRL_PON_SEX_SELECT} == "matched" ] && PON_SEX_PATTERN="M_denoisedCR_PoN-M|F_denoisedCR_PoN-F|unk_denoisedCR_PoN-unk"
 
 				CTRL_CN_FILE=${CTRL_CN_DIR}"ctrl_denois_CN_NofCTRL="${N}"_PoN-"${CTRL_PON_SEX_SELECT}".rds"
 				CTRL_CN_FILE_SEGMENT=${CTRL_CN_DIR}"ctrl_denois_CN_NofCTRL="${N}"_PoN-"${CTRL_PON_SEX_SELECT}"_LOSS="${SEGM_MINLOSS}"_GAIN="${SEGM_MINGAIN}".tsv"

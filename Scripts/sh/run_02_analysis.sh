@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source ${1}
+CHECKPOINTS=${2}
 
 echo -e ${COL1}${BEG}${COL2}
 echo -e ${COL1}"◼︎ $(date)"${COL2}
@@ -935,7 +936,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 									${SEGM_MINLOSS} \
 									${SEGM_MINLOSS_SUB} \
 									${OUTPUT}
-
+								
 								if [[ ${CHECKPOINTS} == "yes" ]]; then 
 									if ls "status_ok" 1> /dev/null 2>&1; then
 										rm "status_ok"

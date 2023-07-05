@@ -233,7 +233,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 	CTRL_VALUES=("yes" "no")
 	CTRL_SEX_TEST_VALUES=("default" "custom" "no")
 	CTRL_PON_SEX_SELECT_VALUES=("default" "M" "F" "matched" "mixed")
-	SMPL_PON_SEX_SELECT_VALUES=("default" "M" "F" "matched" "mixed" "both_separated" "matched_main" "matched_each" "all_options")
+	SMPL_PON_SEX_SELECT_VALUES=("default" "M" "F" "mixed" "both_separated" "matched_main" "matched_each" "all_options")
 	CN_FREQ_IN_CTRLS_VALUES=("yes" "no")
 	GNOMAD_SELECTION_VALUES=("default" "capture_filter" "capture_filter_and_ctrl_denois" "af_filter" "af_filter_and_ctrl_denois")
 	SEGMENTATION_ID_USE_VALUES=("default" "segm_id" "full")
@@ -605,9 +605,9 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 				fi
 			fi
 				
-			[[ ${WAY_TO_BAM} == "absolute" ]] && BAMFILE=${SMPL_BAM_DIR}${SAMPLE_1_BAM_PATH}
+			[[ ${WAY_TO_BAM} == "absolute" ]] || [[ ${WAY_TO_BAM} == "default" ]] && BAMFILE=${SMPL_BAM_DIR}${SAMPLE_1_BAM_PATH}
 
-			if [[ ${WAY_TO_BAM} == "absolute" ]]; then
+			if [[ ${WAY_TO_BAM} == "absolute" ]] || [[ ${WAY_TO_BAM} == "default" ]]; then
 				if ! ls ${BAMFILE} 1> /dev/null 2>&1; then
 					echo -e ${COL1_INFO}"◼︎ CHECKPOINT ERROR - could not find BAM file filled in "${MASTERSAMPLES}
 					echo -e "   Expected 1 BAM file but found 0"
