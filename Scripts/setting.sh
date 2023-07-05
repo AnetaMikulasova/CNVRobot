@@ -1,12 +1,10 @@
 #!/bin/bash
 
 #extract CNVRobot path
-HOME_PATH=`pwd`
-RUN_PATH=`echo "$0" | sed -e "s/$(basename "$0")$//g"`
-cd ${RUN_PATH}
-cd ../..
+RUN_PATH=`pwd`
+cd ..
 ROBOT_PATH=`pwd`
-cd ${HOME_PATH}
+cd ${RUN_PATH}
 
 MASTERS=${ROBOT_PATH}"/Masters/"
 SH=${ROBOT_PATH}"/Scripts/sh/"
