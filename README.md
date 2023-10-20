@@ -4,24 +4,14 @@
   <img src="https://github.com/AnetaMikulasova/CNVRobot/blob/main/CNVRobot_logo.png" alt="CNVRobot logo" width="200" height="207"/>
 </p>
 
-Welcome to CNVRobot v4.1!
-
-IMPORTANT UPDATES:
-
-Please note the following UPDATES compared to the v3 version:
-1) Analysis is now available in CHM13v2.0. 
-    - The FASTA file can be downloaded at [T2T aws](https://s3-us-west-2.amazonaws.com/human-pangenomics/index.html?prefix=T2T/CHM13/assemblies/analysis_set/) (`chm13v2.0.fa.gz`)
-    - To view profiles of whole chromosomes, read counts must also be collected in regions of low mapping quality. To enable this (by disabling "MappingQualityReadFilter"), `READ_COUNT_MODE` should be set to `DF` in `master_project`. Please note, this is a new column in `master_project`.
-2) A new R package is required: [IRanges](https://bioconductor.org/packages/release/bioc/html/IRanges.html).
-3) Checkpoints have been introduced: Several control points are implemented that halt the process by giving an error message when something unexpected is detected (e.g., unknown or empty value in master table, BAM file not found, database file missing). These checkpoints are still in development and may be error-prone. Therefore, there's an option to disable them by changing `CHECKPOINTS="yes"` to `CHECKPOINTS="no"` at the beginning of the `run.sh` script. If an error is discovered in the checkpoints or if any other checkpoint can be suggested, I would appreciate it if you [contact me](mailto:Aneta.Mikulasova@newcastle.ac.uk).
-
-Work in progress: I have developed a module that allows outputs from CNVRobot to be directly processed by [ASCAT](https://www.crick.ac.uk/research/labs/peter-van-loo/software) for matching tumor-germline analyses. This provides information about ploidy and absolute copy-number analyses. If you are interested, please do not hesitate to [contact me](mailto:Aneta.Mikulasova@newcastle.ac.uk) for the in-progress code.
+Welcome to CNVRobot v4.2!
 
 ## 1. Description
 CNVRobot is an integrated pipeline designed to detect rare germline and somatic copy-number variants (CNVs) as well as loss of heterozygosity (LOH) regions in the human genome using short-read DNA sequencing from any NGS platform. This includes targeted sequencing (TS), whole-exome sequencing (WES), and whole-genome sequencing (WGS). It integrates sequencing depth with SNP zygosity across the genome, incorporates advanced data denoising, segmentation and variant prioritization options, and provides detailed visualization for manual inspection of detected CNVs.
 
 ## 2. Download
-The code, databases, and example data can be downloaded from [HERE](https://newcastle-my.sharepoint.com/:f:/g/personal/nam320_newcastle_ac_uk/Eu2m1nidAKVDoXxuDONbqToBJfbYPwpbjeRuU6ERhcqHrg?e=yshGbA). The latest version is CNVRobot v4.1.
+The code, databases, and example data are available for download [HERE](https://newcastle-my.sharepoint.com/:f:/g/personal/nam320_newcastle_ac_uk/Eu2m1nidAKVDoXxuDONbqToBJfbYPwpbjeRuU6ERhcqHrg?e=yshGbA). The latest version is CNVRobot v4.2.
+Please note that the databases are not available here on GitHub.
 
 ## 3. Dependencies (License)
 - [GATK v4.2+](https://github.com/broadinstitute/gatk/releases) (Apache License 2.0)
@@ -39,10 +29,13 @@ The code, databases, and example data can be downloaded from [HERE](https://newc
     - [splitstackshape](https://cran.r-project.org/web/packages/splitstackshape/index.html) (GPL-3)
     - [karyoploteR](http://bioconductor.org/packages/release/bioc/html/karyoploteR.html) (Artistic-2.0)
     - [IRanges](https://bioconductor.org/packages/release/bioc/html/IRanges.html) (Artistic-2.0)
+- only for [CNVkit](https://cnvkit.readthedocs.io/en/stable/quickstart.html) analysis: see [CNVkit github](https://github.com/etal/cnvkit) for instalation via Conda and setting up a new Python environment 
+- only for [ASCAT](https://www.crick.ac.uk/research/labs/peter-van-loo/software) analysis: R packages [ASCAT](https://github.com/VanLoo-lab/ascat), [GenomicRanges](https://bioconductor.org/packages/release/bioc/html/GenomicRanges.html) (Artistic-2.0) and [plyranges](https://www.bioconductor.org/packages/release/bioc/html/plyranges.html) (Artistic-2.0)
+
 
 ## 4. Inputs
 - BAM files
-- FASTA file - the reference file used for alignment
+- FASTA file - the reference file used for alignment (possible assemblies: hg19, GRCh37, hg38, GRCh38, or CHM13v2.0)
 - capture BED file (for WES or TS)
   - first three columns required - contig, start, and end; no header
   - requires the same genome assembly as the reference file (Contigs not found in the reference will be automatically excluded.)
@@ -70,13 +63,43 @@ Platform: targeted sequencing
 Chromosome locus: 21q21  
 Genomic position: chr21:15.0-16.0Mb  
 Genome assembly: hg38  
-CNVs in the sample: loss of chr21:15.2-15.3Mb, gain of chr21:15.7-15.8Mb  
+CNVs in the sample: loss of chr21:15.2-15.3Mb, gain of chr21:15.7-15.8Mb 
+You can browse `/Test_example/Test_example_output` to see the output from this example data, including figures and IGV files.
+
 
 ## 7. Control set selection
-GATK recommends that the control set consists of at least 40 samples without pathogenic CNVs, which were prepared, sequenced, and analyzed using the same laboratory protocols and bioinformatic processing. However, any simultaneously processed control is better than no control, and the use of just 2–5 controls can already be highly effective in reducing noise from technical artifacts. The control set can overlap with the sample set if no pathological CNVs are expected. For example, the control set can consist of unaffected parents in a pedigree dataset or germline samples in a cancer dataset. Any related samples are automatically excluded from controls during analysis using the main identifier stated in the sample and control spreadsheet. 
+GATK recommends that the control set consists of at least 40 samples without pathogenic CNVs. These samples should be prepared, sequenced, and analyzed using the same laboratory protocols and bioinformatic processes. However, even if you only have 2–5 controls processed simultaneously, it is still better than having no control at all. Even a small number of controls can already be highly effective in reducing noise from technical artifacts. The control set can overlap with the sample set, as long as no pathological CNVs are expected. For instance, the control set can comprise unaffected parents in a pedigree dataset or germline samples in a cancer dataset. By default, any related samples are automatically excluded from the controls during analysis. This is done by excluding all controls that match the main identifier `MAIN_ID` provided in both the sample and control spreadsheet.
 
-## 8. Sex test
-The sex test is a part of the preparation script. It compares local coverage of two genes, the tested gene and the control gene, to verify the sex of each control. This helps to recognize potential sample swaps that could disrupt normalization, denoising, and analysis of gonosomes. Genomic coordinates for collection are provided by the sex master file, and the test on/off is regulated in the project's master file. The default setting involves the *SRY* and *GAPDH* genes, but requires both genes to be covered. If the default genes are not covered by the sequencing, alternative loci can be specified in the sex master file. Pairing customized loci with the project is defined by `PROJECT_ID`. If a customized setting is used, the tested loci (on chromosome Y) and the control loci (on any autosome) must be of the same size (bp). The sex test may not be possible to perform in the case of some targeted panels where no target at chromosome Y is included.
+### 7.1 Denoising tumor sample by correspoinding germline only
+CNVRobot offers an option to denoise a tumor sample using its corresponding germline sample. The resulting profile might be noisier (as only one control is technically used), but it can provide a better understanding of what is somatic and what is germline. This option can be configured under `SETTING_MODE` in the `/Masters/master_projects.txt`. See the `Specific project setting options` section for further details.
+
+## 8. Sex and gonosomes
+For the accurate analysis of CNV on chrX and chrY, denoising using controls and segmentation are carefully processed. To detect gonosomal CNVs correctly, controls of the same sex are required for GATK data denoising. This means that `SMPL_PON_SEX_SELECT` within `/Masters/master_projects.txt` should be `M`, `F`, `both_separated`, `matched_main`, or `matched_each`. The CNVRobot segmentation algorithm will always recognize which control sex was used against which sample sex and adjust log2 ratio cut-offs for abnormalities accordingly. For chrY analysis in males, the Panel of Normals should consist of male controls. If the Panel of Normals consists of female controls, chrY data will be excluded from the analysis by GATK algorithms. If `SMPL_PON_SEX_SELECT` is mixed, the analysis of chrX will still be correct (due to coverage doubling in males, see below), but chrY cannot be reported accurately as it will be influenced by the ratio of males and females in the GATK Panel of Normals.
+Note that CNVRobot has a module for denoising data using CNVkit, which can be beneficial for the analysis of chrY if a small control set is available and/or includes female controls only. See the `Specific project setting options` section for further details.
+Before including a control in the Panel of Normals, its sex is verified or predicted if unknown. Sex tests and predictions do not run for samples, as gonosomal aneuploidies can be present.
+
+### 8.1 Sex test of controls
+Each control is tested to ensure the sex is correctly determined by the `CTRL_SEX` value in `/Masters/master_controls.txt`. This test uses global coverage (normalized for genomic size) of gonosomes compared to autosomes. If there are no gonosomal sequencing targets, the test will be skipped. If there are no autosomal sequencing targets, but both gonosomes have sequencing targets, the test will use the ratio of chrY to chrX. If the predicted sex differs from what was provided by the user, the pipeline will halt and report this error.
+
+### 8.2 Sex prediction for controls with unknown sex
+If `CTRL_SEX` is defined as `unk` in `/Masters/master_controls.txt`, the same test will be run to predict the sex, and the control will be further processed using this predicted sex.
+
+### 8.3. Gonosomal analysis
+By default, the collected coverage of chrX and chrY is now doubled in male samples and controls. This step was introduced in response to observations of GATK "over-denoising" gonosomes relative to autosomes when the Panel of Normals is composed of males (haploid chrX and chrY). The normal (diploid) values for log2 ratios are as follows:
+- F sample denoised by F controls: chrX = 0, chrY = no data
+- M sample denoised by F controls: chrX = 0, chrY = no data
+- F sample denoised by M controls: chrX = 0, chrY = deep minus
+- M sample denoised by M controls: chrX = 0, chrY = 0
+
+The segmentation algorithm automatically adjusts log2 ratio cut-offs for gonosomes based on the sample/control sex. Therefore, chrY will not be reported as deleted in a female sample if the Panel of Normals consists of male samples.
+
+If, for any reason, a user prefers the original analysis without doubling the male gonosomal coverage, it is possible to specify this for your project run under `SETTING_MODE` in `/Masters/master_projects.txt`. Refer to the `Specific project setting options` section for details. Note that the segmentation algorithm will detect this and adjust log2 ratio cut-offs for gonosomes accordingly, avoiding reports of changes due to sex-flips. In this setting, the normal (diploid) values for log2 ratios are as follows:
+- F sample denoised by F controls: chrX = 0, chrY = no data
+- M sample denoised by F controls: chrX = -1, chrY = no data
+- F sample denoised by M controls: chrX = 1, chrY = deep minus
+- M sample denoised by M controls: chrX = 0, chrY = 0
+
+
 
 ## 9. Data segmentation
 The segmentation of denoised coverage and SNP zygosity data is an important step to recognize abnormal segments (losses, gains, and LOH).
@@ -84,17 +107,71 @@ The segmentation of denoised coverage and SNP zygosity data is an important step
 The pipeline offers a default segmentation setting. However, results can be reviewed and segmentation conditions adapted by the user based on data type, quality, and expectation. There are two options for customizing segmentation conditions using the project's master file `SEGMENTATION_ID` column:  
 a) **smart segmentation**: The identifier pattern `smart-XX` is provided within `SEGMENTATION_ID` (in the project's master file), where `XX` represents a segmentation coefficient, a number between 0.5 (for high sensitivity) and 1 (for high specificity). If smart segmentation is used, segmentation conditions are not loaded from the segmentation master file, but are instead calculated automatically by the given segmentation coefficient and detected sample quality. For subclonal analysis, the pattern is `smart-XX-sub-YY`, with `YY` representing a number between 0.1 and 1.0 (for example, 0.5 indicates a subclonal analysis to detect monoallelic CNV in 50% of cells).  
 b) **custom segmentation**: A short identifier (for example, *my_segm*, *somatic_segmentation*, etc.) is provided within `SEGMENTATION_ID` (in the project's master file). This identifier matches a unique column name within the segmentation master file, where all segmentation conditions are manually defined by the user.
-### 9.2. Sex-flip 
-For calling gonosomal abnormalities, controls of the same sex are required for data denoising. The pipeline operates in a sex-flip recognizing mode. If the opposite sex is recognized for denoising (as defined in the project's master file), the pipeline will automatically edit segmentation conditions for gonosomes to prevent the calling of loss/gain due to sex-flip. It should be noted that if female controls are used for male samples, chromosome Y will be excluded from the analysis.
 
 
-## 10. Master files
 
-### 10.1. Base master file
+### 10. Specific project setting options
+CNVRobot offers several run options beyond the default settings that can be useful for specific situations. These settings are found under `SETTING_MODE` in `/Masters/master_projects.txt`. Due to their complexity, they are explained in this specific section rather than in the `/Masters/master_projects.txt` description. The `SETTING_MODE` can simply be set to `default`, in which case CNVRobot will operate in its standard setting. 
+
+However, `SETTING_MODE` consists of seven positions, each of which can switch the run to a specific project setting.
+
+**Position 1 - Low mapping quality read count collection**: `F`/`-` (default) or `D`:
+- Introduced with the T2T-CHM13v2.0 genome assembly to enable the collection of low mapping quality reads.
+  - `F`/`-` (default) - This is the GATK-recommended setting when all read filters are enabled. While `F` and `-` are equivalent, if Microsoft Excel is used to fill the master files, `F` should be used since the `-` symbol can cause issues when placed at the beginning.
+  - `D` - Enables the collection of reads with the "-DF "MappingQualityReadFilter" argument. This collects low-quality reads, allowing us to visualize regions like centromeres using GATK algorithms.
+
+**Position 2 - Matching germline denoising of tumor sample**: `-` (default) or `G`
+  - `-` (default) - The Panel of Normals is created based on the list of controls found within `/Masters/master_controls.txt` and by the defined sex (`SMPL_PON_SEX_SELECT` in `/Masters/master_projects.txt`). The matching germline is excluded from the denoising. If listed as `SAMPLE2` in `/Masters/master_samples.txt`, it will be processed alongside the tumor with the same Panel of Normals.
+  - `G` - The tumor sample will be denoised using only the corresponding germline sample. This germline must be listed in `/Masters/master_controls.txt` with the same `MAIN_ID` identifier as the tumor sample in `/Masters/master_samples.txt`. If the germline is also listed as `SAMPLE2` in `/Masters/master_samples.txt`, it will be processed next to the tumor and denoised by the Panel of Normals as in the default setting.
+
+**Position 3 - Not-doubling gonosomal coverage**: `-` (default) or `A` (refer to `Gonosomal analysis` section for context)
+  - `-` (default) - The collected coverage of chrX and chrY is doubled in male samples and controls.
+  - `A` - The collected coverage of chrX and chrY IS NOT doubled in male samples and controls (retains the original GATK setting).
+
+**Position 4 - Speeding up CNVRobot by skipping certain steps**: `-` (default) or `Q`: 
+  - `-` (default) - No steps are skipped.
+  - `Q` - Skips the following: segmentation and QC metrics for controls, as well as annotation and reports for samples.
+
+**Position 5 - Speeding up CNVRobot plotting by omitting detailed plots**: `-` (default) or `Q`
+  - `-` (default) - A figure is generated for each abnormal segment (excluding sub-clonal findings).
+  - `Q` - No figure is generated for abnormal segments. Genome and chromosome figures are still generated.
+
+**Position 6 - Running [CNVkit](https://cnvkit.readthedocs.io/en/stable/quickstart.html)** (tested with v0.9.10): `-` (default) or `Y` 
+  - `-` (default) - CNVkit is silent.
+  - `Y` - CNVkit runs alongside GATK. Note that it needs to be correctly installed in a specific Python environment and requires paths to `CONDA` and `CNVKIT_ENV` (environment name) specified in `/Masters/setting_base.txt`. CNVkit is used for coverage collection and denoising and may offer advantages for gonosomal analysis. Data is segmented using the CNVRobot algorithm. Outputs are similar to those produced by GATK, including plots and IGV files.
+
+  The normal (diploid) values for log2 ratios processed by CNVkit are as follows:
+  - F sample denoised by F controls: chrX = 0, chrY = deep minus
+  - M sample denoised by F controls: chrX = 0, chrY = 0
+  - F sample denoised by M controls: chrX = 0, chrY = deep minus
+  - M sample denoised by M controls: chrX = 0, chrY = 0
+
+**Position 7 - Running [ASCAT](https://www.crick.ac.uk/research/labs/peter-van-loo/software)** (tested with v2.5.2): `-` (default) or `Y`
+  - `-` (default) - ASCAT is silent.
+  - `Y` - ASCAT is running. This allows output from CNVRobot to be directly processed by ASCAT to determine ploidy and analyze absolute copy-number data in a tumor sample. Please note that this mode is still a work in progress and requires both a tumor and a matching germline sample. The germline sample must be specified as `SAMPLE2` in `/Masters/master_samples.txt` to be included in the analysis. Outputs are stored in a separate folder within each sample and include regular ASCAT outputs as well as IGV files with absolute CN for segments (`/IGV/*_absCN*`) from CNVRobot, and ASCAT CN segmentation for major and minor alleles (`/IGV/*_allele.bw`).
+
+
+Examples of `SETTING_MODE`:
+- `default`: All defaults apply - only reads with high mappability are collected by GATK, Panel of Normals is used for denoising, gonosomal coverage is doubled in males, no steps are skipped, and neither CNVkit nor ASCAT are run.
+- `D` (equivalent to `D------`): Reads with low mapping quality will be collected by GATK. Other settings will remain as default.
+- `-G` (equivalent to `-G-----`/`FG-----`): The tumor will be denoised by its matching germline. Other settings will remain as default.
+- `---QQ` (equivalent to `---QQ--`/`F--QQ--`): CNVRobot will skip certain steps during processing and will not generate a plot for each abnormality. Other settings will remain as default.
+- `D-A` (equivalent to `D-A----`): Reads with low mapping quality will be collected by GATK, and gonosomal coverage will not be doubled in males. Other settings will remain as default.
+- `-----Y` (equivalent to `-----Y-`/`F----Y-`): CNVRobot runs CNVkit in addition to default settings. 
+- `------Y` (equivalent to `F-----Y`): CNVRobot runs ASCAT in addition to default settings. 
+
+Important: If Microsoft Excel is used to fill the master files, the pattern starting `F` (not `-`) should be used. Symbol `-` at the beggining can cause issues.
+Please note that the `SETTING_MODE` component of CNVRobot is still under development. If any aspect is unclear, do not hesitate to [contact me](mailto:Aneta.Mikulasova@newcastle.ac.uk) for further details.
+
+
+
+## 11. Master files
+
+### 11.1. Base master file
 `/Masters/setting_base.sh`  
 Paths to software, main output folders, and basic parameters for the identification of noisy and rare SNPs in the gnomAD database
 
-### 10.2. Projects master file
+### 11.2. Projects master file
 `/Masters/master_projects.txt`  
 Main information for each project
 
@@ -125,10 +202,7 @@ Columns:
   - `GRCh38-hg38` - for any version of human genome assembly such as GRCh38 and hg38
   - `CHM13v2.0` - for T2T-CHM13v2.0 genome assembly
 - `REF` - path to fasta file
-- `READ_COUNT_MODE` **(D)** **(!)** = `F`, `DF` - introduced with T2T-CHM13v2.0 genome assembly to enable collect low mapping quality reads
-  - `default` = `F`
-  - `F` - GATK recommended setting when all read filters are enabled
-  - `DF` - enables collect reads with "-DF "MappingQualityReadFilter" argument. Low quality reads are collected which enable us to see regions like centromeres.
+- `SETTING_MODE` **(D)** **(!)** = see `Specific project setting options section`
 - `GENE_ANNOTATION` **(D)** - path to gene database that will be used for annotation and plots
   - `default` - refseq database will be used, provided in `/Databases/GENE_ANNOTATION/`
   - `/path/to/file` - custom file can be prepared, see `Custom gene annotation` section below
@@ -188,7 +262,7 @@ Columns:
   - If smart segmentation is used, `segm_id` is selected automatically.
 - `NOTE` - any additional information that the user wants to keep with the project
 
-### 10.3. Controls master file
+### 11.3. Controls master file
 `/Masters/master_controls.txt`  
 Controls spreadsheet
 
@@ -212,7 +286,7 @@ Columns:
 - `CTRL_PATH_TO_BAM` - control BAM file path when `WAY_TO_BAM` is `absolute`, the final path for each BAM file is a combination of `CTRL_BAM_DIR` (projects master file) and `CTRL_PATH_TO_BAM`. If `WAY_TO_BAM` is `find_in_dir`, this column is not used.
 - `NOTE` - any additional information that the user wants to keep with the control
 
-### 10.4. Samples master file
+### 11.4. Samples master file
 `/Masters/master_samples.txt`  
 Samples spreadsheet
 
@@ -249,9 +323,7 @@ Columns:
 - `SAMPLE3_PATH_TO_BAM` - sample_3 BAM file path when `WAY_TO_BAM` is `absolute`, the final path for each BAM file is a combination of `SMPL_BAM_DIR` (projects master file) and `SAMPLE3_PATH_TO_BAM`. If `WAY_TO_BAM` is `find_in_dir`, this column is not used.
 - `NOTE` - any additional information that user wants to keep with the sample
 
-
-
-### 10.5. Sample and regions of interest to plot master file
+### 11.5. Sample and regions of interest to plot master file
 `/Masters/master_reg_of_interest_to_plot.txt`  
 Spreadsheet that allows to plot required region for required sample; if `PROJECT_ID` is recognized to be running and at least one of the lines of this master file has `INCLUDE` = `yes`, a separate detailed plot for the required sample within `/detail_regions_of_interest/` folder will be produced. It can be useful when a user wants to print a suspicious region that was not recognized as abnormal and therefore not printed as a detailed plot.
 
@@ -267,7 +339,7 @@ Columns:
   - `1`: `CONTIG`: [`START`-1✗(`END`-`START`)] - [`END`+1✗(`END`-`START`)] will be printed to the plot
   - `2`: `CONTIG`: [`START`-2✗(`END`-`START`)] - [`END`+2✗(`END`-`START`)] will be printed to the plot
 
-### 10.6. Segmentation master file
+### 11.6. Segmentation master file
 `/Masters/setting_segmentation.txt`  
 Parameters for CNVs and LOH segmentation, used when custom segmentation is selected (see column `SEGMENTATION_ID` in the projects master) and paired by a short identifier.
 
@@ -298,43 +370,32 @@ List of parameters:
 
 Subclonal analysis is defined by parameters ending with `_SUB`. If no subclonal analysis is required, these variables are set to `none`. If `SEGM_GAP` is set to `none`, segments continue independently regardless of their distance from each other in the capture.
 
-### 10.7. Sex master file
-`/Masters/sex_test_regions.txt`  
-Genomic locations for sex test.
-
-**(!)** = requires explicit values
-
-Columns:
-- `CONTIG`
-- `START`
-- `END`
-- `GENE_TYPE` **(!)** - `TEST_GENE`, `CTRL_GENE`
-  - `TEST_GENE` - Genomic position of the tested gene 
-  - `CTRL_GENE` - Genomic position of the control gene
-- `PROJECT_ID` - Short identifier for the project (must match all `PROJECT_ID` values in the other master files)
-- `GENE` - Gene symbol
-
-## 11. Outputs
-
-### 11.1. Data outputs
-- `...allelicCounts...` - RDS file with SNP zygosity collection
-- `...counts...` - HDF5 and TSV files with coverage collection
-- `...denoisedCR...` - TSV file with denoised coverage data
-- `...standardizedCR...` - TSV file with standardized coverage data
-- `...SEGMENTS...segmentation...` - TSV file with segmentation data before annotation, contains all normal and abnormal segments
-- `...SEGMENTS...` - TSV file with segmentation and annotation, contains all normal and abnormal segments
-- `...SEGMENTS...REPORT...` - TSV file with segmentation, annotation, and variant origin prediction, contains ONLY abnormal segments
 
 
-### 11.2. Plot outputs
+## 12. Outputs
+
+### 12.1. Data outputs
+`/CNVRobot/Processing/Results/PROJECT_ID/PROJECT_ID_SETTING/data/`  
+- `...allelicCounts...rds` - RDS file with SNP zygosity collection
+- `...counts...hdf` - HDF5 file with coverage collection
+- `...denoisedCR...tsv` - TSV file with denoised coverage data
+- `...SEGMENTS...segmentation...tsv` - TSV file with segmentation data before annotation, contains all normal and abnormal segments
+- `...SEGMENTS...tsv` - TSV file with segmentation and annotation, contains all normal and abnormal segments
+- `...SEGMENTS...REPORT...tsv` - TSV file with segmentation, annotation, and variant origin prediction, contains ONLY abnormal segments
+
+### 12.2. Plot outputs
+`/CNVRobot/Processing/Results/PROJECT_ID/PROJECT_ID_SETTING/plot_SETTING/plot/`
 - **genome** - Figure showing all chromosomes (contigs with centromere) extracted from the reference (usually chr1-chr22, chrX, and chrY)
 - **chromosome** - Figure is generated for each chromosome
-- **detail** - Figure is generated for each abnormal segment (does not include sub-clonal findings)
+- **/detail/** - Folder with figures generated for each abnormal segment (does not include sub-clonal findings)
 
-### 11.3. IGV outputs
-- `mainID_sampletype_ID_sex_abnormal_segments.bed` - BED file with abnormal segments
+### 12.3. IGV outputs
+`/CNVRobot/Processing/Results/PROJECT_ID/PROJECT_ID_SETTING/plot_SETTING/IGV/`  
 
-- `mainID_sampletype_ID_sex_segments.bw` - BigWig with segments, `mainID_sampletype_ID_sex_CN.bw` - BigWig with denoised coverage data
+- `..._abnormal_CN_segments.bed` - BED file with segments for DNA losses and gains
+- `..._abnormal_LOH_segments.bed` - BED file with segments for LOH (any regions with deviation from heterozygosity, which can be due to deletion, cnnLOH or gain); generated only if LOH region(s) were detected
+
+- `..._segments.bw` - BigWig with all segments (normal and abnormal), `..._CN.bw` - BigWig with denoised coverage data
   - IGV setting:
     - Type of Graph: Points
     - Windowing Function: None
@@ -342,13 +403,30 @@ Columns:
   - Note: log2 ratio values smaller than -2.25 are shifted to -2.25 and log2 ratio bigger than 2.25 are shifted to 2.25 in IGV output (as well as in the PNG plots)
   - Tip: when these two BigWig files in the same setting, mark them and by right click select "Overlay Tracks"
 
-- `mainID_sampletype_ID_sex_SNP.bw` - BigWig with SNP zygosity
+- `.._SNP.bw` - BigWig with SNP zygosity
   - IGV setting:
     - Type of Graph: Points
     - Windowing Function: None
     - Set Data Range: min 0.0, mid 0.5, max 1.0
 
-## 12. Custom gene annotation
+### 12.4. CNVkit
+#### 12.4.1. Data outputs
+`/CNVRobot/Processing/Results/PROJECT_ID/PROJECT_ID_SETTING/data/`  
+- `...(anti)targetcoverate.cnn` - CNN file with coverage collection
+- `...cnr` - denoised coverage data
+- `...SEGMENTS...CNVkit.tsv` - TSV files with segmentation, same as above, just generated using CNVkit data
+### 12.4.2 Plot and IGV outputs
+`/CNVRobot/Processing/Results/PROJECT_ID/PROJECT_ID_SETTING/plot_SETTING/cnvkit_plot/`
+`/CNVRobot/Processing/Results/PROJECT_ID/PROJECT_ID_SETTING/plot_SETTING/cnvkit_IGV/`  
+- same as above, just generated using CNVkit data
+
+### 12.5. ASCAT
+`/CNVRobot/Processing/Results/PROJECT_ID/PROJECT_ID_SETTING/ascat.../`
+- contains data outputs from ASCAT (`/data/`) and IGV files (`/IGV/`)
+- note, this is still a work in progress
+
+
+## 13. Custom gene annotation
 How to prepare gene annotation other than default RefSeq provided:
 - Download the required gene annotation from [UCSC website](https://genome.ucsc.edu/cgi-bin/hgTables?hgsid=968304787_9UHI0R5esZuD1z4azUHoV9dEdsoU).
 - Columns have to be named as follows (order does not need to be the same):
@@ -363,11 +441,11 @@ How to prepare gene annotation other than default RefSeq provided:
   - `exonEnds`: Exon end positions
  Most of the columns will match automatically, only `gene_id` needs to be picked and renamed by the user, for example, by using the command `sed -i 's/name2/gene_id/g' file.txt`. The table should never be edited in EXCEL due to renaming some gene symbols to dates. Contig IDs have to match IDs in the reference file. 
 
-## 13. Project-specific plot
+## 14. Project-specific plot
 This is an advanced option that allows the production of personalized detail plots for additional regions with personalized annotation.
 A customized R script is required, provided in the example. This script has to be placed in the `/CNVRobot_vX.X/Scripts/R/` folder and named as `plot_CN_PROJECT_ID.R`. It is then recognized as a source in `plot_CN.R` and produces plots within the `/project_specific_regions/` folder.
 
-## 14. Databases source
+## 15. Databases source
 - Processing of the databases from the original source is available upon request.
 - Original sources of databases:
   - gnomAD SNP:
@@ -389,8 +467,8 @@ A customized R script is required, provided in the example. This script has to b
     - GRCh37/hg19: [UCSC Table Browser](https://genome-euro.ucsc.edu/cgi-bin/hgTables) - `ENCODE Blacklist (encBlackList)` (under Mapping and Sequencing, Problematic Regions)
     - GRCh38/hg38 and CHM13v2.0: liftover from GRCh37/hg19, unlifted regions excluded
 
-## 15. Limitations
-The CNVRobot pipeline is not suitable for the detection of common population CNVs and CNVs in low mappability regions. It should be noted that it is a depth of coverage analysis within certain bins and thus starts and ends of abnormalities are not precisely mapped. CNVRobot can detect only unbalanced changes. Similarly to DNA microarrays, coverage-based analysis can be problematic if the ploidy of the sample is changed, as it is based on median centering normalization.
+## 16. Limitations
+The CNVRobot pipeline is not designed for detecting common population CNVs and may produce errors in regions with low mappability. Users should be aware that CNVRobot performs a depth of coverage analysis within specified bins; therefore, the exact starting and ending points of abnormalities are not precisely determined. The tool is only capable of detecting unbalanced changes. Much like DNA microarrays, coverage-based analysis can pose challenges when there's a change in the sample's ploidy, given that it relies on median centering normalization.
 
-## 16. Contact
+## 17. Contact
 Aneta.Mikulasova@newcastle.ac.uk
