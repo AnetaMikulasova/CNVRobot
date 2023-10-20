@@ -110,7 +110,7 @@ b) **custom segmentation**: A short identifier (for example, *my_segm*, *somatic
 
 
 
-### 10. Specific project setting options
+## 10. Specific project setting options
 CNVRobot offers several run options beyond the default settings that can be useful for specific situations. These settings are found under `SETTING_MODE` in `/Masters/master_projects.txt`. Due to their complexity, they are explained in this specific section rather than in the `/Masters/master_projects.txt` description. The `SETTING_MODE` can simply be set to `default`, in which case CNVRobot will operate in its standard setting. 
 
 However, `SETTING_MODE` consists of seven positions, each of which can switch the run to a specific project setting.
