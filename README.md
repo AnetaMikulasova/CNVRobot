@@ -415,7 +415,7 @@ Subclonal analysis is defined by parameters ending with `_SUB`. If no subclonal 
 - `...(anti)targetcoverate.cnn` - CNN file with coverage collection
 - `...cnr` - denoised coverage data
 - `...SEGMENTS...CNVkit.tsv` - TSV files with segmentation, same as above, just generated using CNVkit data
-### 12.4.2 Plot and IGV outputs
+#### 12.4.2 Plot and IGV outputs
 `/CNVRobot/Processing/Results/PROJECT_ID/PROJECT_ID_SETTING/plot_SETTING/cnvkit_plot/`
 `/CNVRobot/Processing/Results/PROJECT_ID/PROJECT_ID_SETTING/plot_SETTING/cnvkit_IGV/`  
 - same as above, just generated using CNVkit data
