@@ -29,6 +29,7 @@ Please note that the databases are not available here on GitHub.
     - [splitstackshape](https://cran.r-project.org/web/packages/splitstackshape/index.html) (GPL-3)
     - [karyoploteR](http://bioconductor.org/packages/release/bioc/html/karyoploteR.html) (Artistic-2.0)
     - [IRanges](https://bioconductor.org/packages/release/bioc/html/IRanges.html) (Artistic-2.0)
+    - [rhdf5](https://bioconductor.org/packages/release/bioc/html/rhdf5.html) (Artistic-2.0)
 - only for [CNVkit](https://cnvkit.readthedocs.io/en/stable/quickstart.html) analysis: see [CNVkit github](https://github.com/etal/cnvkit) for instalation via Conda and setting up a new Python environment 
 - only for [ASCAT](https://www.crick.ac.uk/research/labs/peter-van-loo/software) analysis: R packages [ASCAT](https://github.com/VanLoo-lab/ascat), [GenomicRanges](https://bioconductor.org/packages/release/bioc/html/GenomicRanges.html) (Artistic-2.0) and [plyranges](https://www.bioconductor.org/packages/release/bioc/html/plyranges.html) (Artistic-2.0)
 
