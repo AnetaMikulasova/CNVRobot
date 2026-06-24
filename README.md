@@ -221,7 +221,7 @@ Columns:
 - `CTRL_BAM_DIR` - path to the folder with BAM file of controls
 - `CTRL_BAM_PATTERN` **(D)** - pattern (file suffix) for the BAM files of controls (examples: `*.bam`, `*_final.bam`, etc.); used only when `WAY_TO_BAM` is `find_in_dir`
   - `default` = `na` (which means it is not used as `WAY_TO_BAM` `default` is `absolute`)
-- `CTRL_SEX_TEST` **(D)** **(!)** - `custom`, `no` - see Sex test for more information
+- `CTRL_SEX_TEST` **(D)** **(!)** - `default`, `custom`, and `no` - see Sex test for more information
   - `default` - sex test of controls will be performed using the default setting (*SRY* and *GAPDH* genes coverage)
   - `custom` - sex test of controls will be performed using custom genomic locations defined within the sex master file under `PROJECT_ID`
   - `no` - sex test of controls will not be performed (for example because chromosome Y has no targets, sex of controls is unknown or user just does not require this test to be done)
