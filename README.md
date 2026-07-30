@@ -1,6 +1,6 @@
 # CNVRobot
 
-<p align="left">
+<p align="center">
   <img src="https://github.com/AnetaMikulasova/CNVRobot/blob/main/CNVRobot_logo.png" alt="CNVRobot logo" width="200" height="207"/>
 </p>
 
