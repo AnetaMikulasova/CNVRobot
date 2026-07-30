@@ -22,6 +22,9 @@ All dependencies will need to be installed manually before usage.
 Please note that the databases are **not** available on GitHub.
 
 ## 3. Dependencies (License)
+
+Dependencies need to be installed when setting up the tool manually. Skip this step if using the Docker image, as everything is preinstalled.
+
 - [GATK v4.2+](https://github.com/broadinstitute/gatk/releases) (Apache License 2.0)
 - [PICARD](https://broadinstitute.github.io/picard/) (MIT License)
 - [R](https://www.r-project.org) (GPL-2 | GPL-3)
