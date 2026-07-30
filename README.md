@@ -58,15 +58,13 @@ Dependencies need to be installed when setting up the tool manually. Skip this s
 ### For docker image
 
 
-
 ### For manual setup
-
 1. Fill `./CNVRobot_vX.X/Masters/setting_base.sh` to specify paths for software.
 2. Fill `./CNVRobot_vX.X/Masters/master_projects` to specify conditions for your project.
 3. Fill `./CNVRobot_vX.X/Masters/master_samples.txt` and `./CNVRobot_vX.X/Masters/master_controls.txt` to specify samples and control sets for the project.
 4. Run `./CNVRobot_vX.X/Scripts/run.sh`.
 
-How CNVRobot regulates what project(s), sample(s) and control(s) are executed?
+### How CNVRobot regulates what project(s), sample(s) and control(s) are executed?
 - The `INCLUDE` column in each master file serves as a switch to determine which projects to execute, which samples to analyze, and which controls to employ. This way, it's possible to maintain multiple projects within the project master file, designating `no` in the `INCLUDE` column for the projects you do not wish to activate.
 - The same principle applies to the sample master file; by marking `INCLUDE` as `yes` for a particular sample, you're indicating your intention to analyze it. Conversely, if you want to exclude certain samples from the current analysis, simply assign `no` to the `INCLUDE` field.
 - For the control master file, you might have multiple controls listed. If you need to exclude some controls, perhaps due to poor quality control, assign `no` to their respective `INCLUDE` fields. CNVRobot will register this modification and execute the analysis excluding the specified controls.
