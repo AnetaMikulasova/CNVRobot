@@ -54,6 +54,13 @@ Dependencies need to be installed when setting up the tool manually. Skip this s
 - Master files - spreadsheets of the project, controls, samples, etc.; see below for details.
 
 ## 5. Initiate run
+
+### For docker image
+
+
+
+### For manual setup
+
 1. Fill `./CNVRobot_vX.X/Masters/setting_base.sh` to specify paths for software.
 2. Fill `./CNVRobot_vX.X/Masters/master_projects` to specify conditions for your project.
 3. Fill `./CNVRobot_vX.X/Masters/master_samples.txt` and `./CNVRobot_vX.X/Masters/master_controls.txt` to specify samples and control sets for the project.
