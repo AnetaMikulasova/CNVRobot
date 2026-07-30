@@ -123,7 +123,7 @@ The segmentation of denoised coverage and SNP zygosity data is an important step
 ### 9.1. Segmentation conditions
 The pipeline offers a default segmentation setting. However, results can be reviewed and segmentation conditions adapted by the user based on data type, quality, and expectation. There are two options for customizing segmentation conditions using the project's master file `SEGMENTATION_ID` column:  
 a) **smart segmentation**: The identifier pattern `smart-XX` is provided within `SEGMENTATION_ID` (in the project's master file), where `XX` represents a segmentation coefficient, a number between 0.5 (for high sensitivity) and 1 (for high specificity). If smart segmentation is used, segmentation conditions are not loaded from the segmentation master file, but are instead calculated automatically by the given segmentation coefficient and detected sample quality. For subclonal analysis, the pattern is `smart-XX-sub-YY`, with `YY` representing a number between 0.1 and 1.0 (for example, 0.5 indicates a subclonal analysis to detect monoallelic CNV in 50% of cells).  
-b) **custom segmentation**: A short identifier (for example, *my_segm*, *somatic_segmentation*, etc.) is provided within `SEGMENTATION_ID` (in the project's master file). This identifier matches a unique column name within the segmentation master file, where all segmentation conditions are manually defined by the user.
+b) **custom segmentation**: A short identifier (for example, *my_segm*, *somatic_segmentation*, etc.) is provided within `SEGMENTATION_ID` (in the project's master file). This identifier matches a unique column name within the segmentation master file (setting_segmentation.txt), where all segmentation conditions are manually defined by the user.
 
 
 
