@@ -15,7 +15,9 @@ CNVRobot is an integrated pipeline designed to detect rare germline and somatic 
 To use CNVRobot's Docker image, follow the instructions at [ankurtchuzy/CNVRobot-docker-dev](https://github.com/ankurtchuzy/CNVRobot-docker-dev).
 
 ### Manual Setup
-The code, databases, and example data are available for download [here](https://ftp.igc.ed.ac.uk/pub/mikulasova-group/). The latest version is CNVRobot v4.2.
+The code, databases, and example data are available for download [HERE](https://ftp.igc.ed.ac.uk/pub/mikulasova-group/). The latest version is CNVRobot v4.2.
+
+All dependencies will need to be installed manually before usage.
 
 Please note that the databases are **not** available on GitHub.
 
