@@ -21,10 +21,14 @@ DATABASES_DIR=/path/to/CNVRobot/Databases/
 #1.3 noisy SNPs parameters
 AFDIF=0.15
 AFDEPTH=10
-# AFDEPTH=5
 AFPERC=0.05
 
-#1.4 minimal allelic frequency of SNP to be selected
+#NOTES:
+# AFDIF = 0.15 — Allele Frequency Difference threshold. The maximum allowed deviation from the expected 0.5 allele fraction (for a true heterozygous SNP) before a SNP is flagged as noisy/unreliable. i.e., only SNPs with AF within 0.5 ± 0.15 (so 0.35–0.65) are kept as "clean" hets.
+# AFDEPTH = 10 — Minimum read depth required at a SNP site before its allele fraction is trusted. Below this threshold, AF estimates are noisy due to low sampling, so the SNP gets excluded.
+# AFPERC = 0.05 — ??
+
+#1.4 Minimal population allelic frequency of SNP to be selected for allelic count
 AF_GNOMAD=0.001
 
 
