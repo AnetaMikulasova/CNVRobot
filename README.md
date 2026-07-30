@@ -43,12 +43,12 @@ Please note that the databases are **not** available on GitHub.
 
 
 ## 4. Inputs
-- BAM files
-- FASTA file - the reference file used for alignment (possible assemblies: hg19, GRCh37, hg38, GRCh38, or CHM13v2.0)
-- capture BED file (for WES or TS)
-  - first three columns required - contig, start, and end; no header
-  - requires the same genome assembly as the reference file (Contigs not found in the reference will be automatically excluded.)
-- master files - spreadsheets of the project, controls, samples, etc.; see below for details
+- Alignment BAM files
+- Reference FASTA file - the reference file used for alignment (possible assemblies: hg19, GRCh37, hg38, GRCh38, or CHM13v2.0)
+- Capture BED file (for WES or TS)
+  - First three columns required - contig, start, and end; no header
+  - Requires the same genome assembly as the reference file (Contigs not found in the reference will be automatically excluded.)
+- Master files - spreadsheets of the project, controls, samples, etc.; see below for details.
 
 ## 5. Initiate run
 1. Fill `./CNVRobot_vX.X/Masters/setting_base.sh` to specify paths for software.
