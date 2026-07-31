@@ -246,7 +246,7 @@ Columns:
   - `M` - only male controls are used for denoising of controls
   - `F` - only female controls are used for denoising of controls
   - `matched` - male controls are used for denoising of male controls and female controls are used for denoising of female controls
-  - `mixed` - male and female controls are mixed together for denoising of samples; NOT RECOMMENDED setting for two reasons: 1) gonozomes cannot be analyzed, and 2) mixing sex was found to increase false positivity rate for autosomes during pipeline testing (one single-sex control provided better sensitivity/specificity than six mixed controls). This setting is recommended to be used only if the sex is unknown and cannot be determined from Y capture.
+  - `mixed` - male and female controls are mixed together for denoising of samples (Controls???); NOT RECOMMENDED setting for two reasons: 1) gonozomes cannot be analyzed, and 2) mixing sex was found to increase false positivity rate for autosomes during pipeline testing (one single-sex control provided better sensitivity/specificity than six mixed controls). This setting is recommended to be used only if the sex is unknown and cannot be determined from Y capture.
 - `SMPL_BAM_DIR` - path to the folder with BAM file of samples
 - `SMPL_BAM_PATTERN` **(D)** - pattern (file suffix) for the BAM files of samples (examples: `*.bam`, `*_final.bam`, etc.); used only when `WAY_TO_BAM` is `find_in_dir`
   - `default` = `na` (which means it is not used as `WAY_TO_BAM` `default` is `absolute`)
