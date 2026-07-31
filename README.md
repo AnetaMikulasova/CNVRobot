@@ -200,7 +200,7 @@ Columns:
 - `INCLUDE` **(!)** - `yes`, `no` - helps to regulate what project(s) will be executed
   - `yes` - project will be executed
   - `no` - project will not be executed
-  - It is recommended to run one project per time.
+  - It is recommended to run one project at a time.
 - `PROJECT_ID` - short and unique identifier for the project
 - `PROJECT_TYPE` **(!)** - `germline`, `tumor`, `other` - important value for variant origin prediction in the final report; also used to define abnormal segments smoothing during segmentation
   - `germline` - final report is generated for a pedigree project as heredity prediction; sample 1 is a proband and samples 2 and 3 are parents (works also if only one parent is available)
