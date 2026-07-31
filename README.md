@@ -294,6 +294,7 @@ Columns:
 - `GENOME_VERSION` **(!)** - `GRCh37-hg19`, `GRCh38-hg38`, matching `GENOME_VERSION` in the other master files
   - `GRCh37-hg19` - for any version of human genome assembly such as GRCh37, hg19, and b37
   - `GRCh38-hg38` - for any version of human genome assembly such as GRCh38 and hg38
+  - `CHM13v2.0` - for T2T-CHM13v2.0 genome assembly
 - `MAIN_ID` - controls/samples group identifier; This identifier is the one that decides which controls to exclude for denoising because of relatedness. Therefore, controls/samples that are related have to share the same identifier in the controls and the samples master file.
 - `CTRL_ID` - control identifier; If `WAY_TO_BAM` is `find_in_dir`, this identifier has to be part of the BAM file name as `CTRL_ID*CTRL_BAM_PATTERN` (pattern determined in the projects master file)
 - `CTRL_SEX` **(!)** - `M`, `F`, `unk` - control sex
