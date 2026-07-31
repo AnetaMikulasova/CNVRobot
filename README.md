@@ -218,7 +218,7 @@ Columns:
   - `GRCh37-hg19` - for any version of human genome assembly such as GRCh37, hg19 and b37
   - `GRCh38-hg38` - for any version of human genome assembly such as GRCh38 and hg38
   - `CHM13v2.0` - for T2T-CHM13v2.0 genome assembly
-- `REF` - path to fasta file
+- `REF` - path to reference genome fasta file
 - `SETTING_MODE` **(D)** **(!)** = see `Specific project setting options section`
 - `GENE_ANNOTATION` **(D)** - path to gene database that will be used for annotation and plots
   - `default` - refseq database will be used, provided in `/Databases/GENE_ANNOTATION/`
