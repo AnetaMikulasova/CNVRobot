@@ -275,7 +275,7 @@ Columns:
 - `SEGMENTATION_ID_USE` **(D)** **(!)** - `segm_id`, `full` - This controls what identifier of segmentation will be used in filenames.
   - `default` = `segm_id`
   - `segm_id` - RECOMMENDED; segmentation condition will be used in filenames by its short identifier (full version is still kept inside of the segmentation table)
-  - `full` - all segmentation parameters in numeric version will be used in filenames; not primarily recommended due to creating long file names that can be difficult in some systems
+  - `full` - all segmentation parameters in numeric version will be used in filenames; not primarily recommended as it creates long filenames that can be difficult in some systems
   - If smart segmentation is used, `segm_id` is selected automatically.
 - `NOTE` - any additional information that the user wants to keep with the project
 
