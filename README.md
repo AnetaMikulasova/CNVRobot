@@ -327,14 +327,14 @@ Columns:
   - `unk` - sex of the sample is unknown
 - `SAMPLE1_PATH_TO_BAM` - sample_1 (main sample) BAM file path when `WAY_TO_BAM` is `absolute`, the final path for each BAM file is a combination of `SMPL_BAM_DIR` (projects master file) and `SAMPLE1_PATH_TO_BAM`. If `WAY_TO_BAM` is `find_in_dir`, this column is not used.
 - `SAMPLE2_ID` - sample_2 identifier; If `WAY_TO_BAM` is `find_in_dir`, this identifier has to be part of BAM file name as `SAMPLE2_ID*SMPL_BAM_PATTERN` (pattern determined in the projects master file)
-- `SAMPLE2_TYPE` - sample_2 (main sample) type; for example *father*, *mother*, *germline*, etc.
+- `SAMPLE2_TYPE` - sample_2 (related sample) type; for example *father*, *mother*, *germline*, etc.
 - `SAMPLE2_SEX` - **(!)** - `M`, `F`, `unk` - sample_2 sex
   - `M` - sample is male
   - `F` - sample is female
   - `unk` - sex of the sample is unknown
 - `SAMPLE2_PATH_TO_BAM` - sample_2 BAM file path when `WAY_TO_BAM` is `absolute`, the final path for each BAM file is a combination of `SMPL_BAM_DIR` (projects master file) and `SAMPLE2_PATH_TO_BAM`. If `WAY_TO_BAM` is `find_in_dir`, this column is not used.
 - `SAMPLE3_ID` - sample_3 identifier; If `WAY_TO_BAM` is `find_in_dir`, this identifier has to be part of BAM file name as `SAMPLE3_ID*SMPL_BAM_PATTERN` (pattern determined in the projects master file)
-- `SAMPLE3_TYPE` - sample_3 (main sample) type; for example *father*, *mother*, etc.
+- `SAMPLE3_TYPE` - sample_3 (related sample) type; for example *father*, *mother*, etc.
 - `SAMPLE3_SEX` - **(!)** - `M`, `F`, `unk` - sample_3 sex
   - `M` - sample is male
   - `F` - sample is female
