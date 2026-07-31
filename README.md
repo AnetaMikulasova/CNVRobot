@@ -266,7 +266,7 @@ Columns:
   - `default` - automatically selected `af_filter_and_ctrl_denois` for WGS and `capture_filter_and_ctrl_denois` for WES and TS
   - `capture_filter` - SNPs are filtered for those being in the covered regions (for TS and WES)
   - `capture_filter_and_ctrl_denois` - `capture_filter` + noisy SNPs (recognized in controls) are excluded; noise in controls is found by default parameters in the base master file
-  - `af_filter` - SNPs with very rare alternative alleles are excluded; allelic frequency is defined by default parameter in the base master file
+  - `af_filter` - SNPs with very rare alternative alleles are excluded; allelic frequency cutoff is defined by default parameter in the base master file
   - `af_filter_and_ctrl_denois` - `af_filter` + noisy SNPs (recognized in controls) are excluded; noise in controls is found by default parameters in the base master file
 - `SEGMENTATION_ID` **(D)** **(!-)** (see `Data segmentation` section above for more information)
   - `default` = `smart-0.65` for single-sex denoising and `smart-0.85` for mixed-sex denoising
