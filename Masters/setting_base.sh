@@ -24,7 +24,7 @@ AFDEPTH=10
 AFPERC=0.05
 
 #NOTES:
-# AFDIF = 0.15 — Allele Frequency Difference threshold. The maximum allowed deviation from the expected 0.5 allele fraction (for a true heterozygous SNP) before a SNP is flagged as noisy/unreliable. i.e., only SNPs with AF within 0.5 ± 0.15 (so 0.35–0.65) are kept as "clean" hets.
+# AFDIF = 0.15 — Allele Frequency  Deviation Tolerance. The maximum allowed deviation from the expected 0.5 allele fraction (for a true heterozygous SNP) before a SNP is flagged as noisy/unreliable. i.e., only SNPs with AF within 0.5 ± 0.15 (so 0.35–0.65) are kept as "clean" hets.
 # AFDEPTH = 10 — Minimum read depth required at a SNP site before its allele fraction is trusted. Below this threshold, AF estimates are noisy due to low sampling, so the SNP gets excluded.
 # AFPERC = 0.05 — ??
 
