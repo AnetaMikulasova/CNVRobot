@@ -723,14 +723,14 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 							#generate list of hdf5 controls from controls master (list, add -I and delet newline \n)
 							if [[ ${GERMLINE_MODE} != "G" ]] || [[ ${GERMLINE_MODE} == "G" && ${CASE_ID} == ${SAMPLE_2_ID} ]]; then
 								if [[ ${PON_SEX} == "mixed" ]]; then
-									cat ${MASTERCONTROLS}"_temp2" | awk -F"\t" -v PROJECT_ID="${PROJECT_ID}" -v CAPTURE_ID="${CAPTURE_ID}" -v GENOME_VERSION="${GENOME_VERSION}" -v MAIN_ID="${MAIN_ID}" '{if ($1=="yes" && $2==PROJECT_ID && $3==CAPTURE_ID && $4==GENOME_VERSION && $5!=MAIN_ID)print}' > ${MASTERCONTROLS}"_temp3"
+									cat ${MASTERCONTROLS}"_temp2" | awk -F"\t" -v PROJECT_ID="${PROJECT_ID}" -v CAPTURE_ID="${CAPTURE_ID}" -v GENOME_VERSION="${GENOME_VERSION}" -v MAIN_ID="${MAIN_ID}" '{if ($1=="yes" && $2==PROJECT_ID && $3==CAPTURE_ID && $4==GENOME_VERSION && $5!=MAIN_ID)print}' | sort -u > ${MASTERCONTROLS}"_temp3"
 								fi
 								if [[ ${PON_SEX} == "M" || ${PON_SEX} == "F" || ${PON_SEX} == "matched_main" || ${PON_SEX} == "matched_each" ]]; then
 									cat ${MASTERCONTROLS}"_temp2" | awk -F"\t" -v PROJECT_ID="${PROJECT_ID}" -v CAPTURE_ID="${CAPTURE_ID}" -v GENOME_VERSION="${GENOME_VERSION}" -v MAIN_ID="${MAIN_ID}" -v PON_SEX_PATTERN="${PON_SEX_PATTERN}" '{if ($1=="yes" && $2==PROJECT_ID && $3==CAPTURE_ID && $4==GENOME_VERSION && $5!=MAIN_ID && $7==PON_SEX_PATTERN)print}' > ${MASTERCONTROLS}"_temp3"
 								fi
 							fi
 							if [[ ${GERMLINE_MODE} == "G" && ${CASE_ID} == ${SAMPLE_1_ID} ]]; then
-								cat ${MASTERCONTROLS}"_temp2" | awk -F"\t" -v PROJECT_ID="${PROJECT_ID}" -v CAPTURE_ID="${CAPTURE_ID}" -v GENOME_VERSION="${GENOME_VERSION}" -v MAIN_ID="${MAIN_ID}" '{if ($1=="yes" && $2==PROJECT_ID && $3==CAPTURE_ID && $4==GENOME_VERSION && $5==MAIN_ID)print}' > ${MASTERCONTROLS}"_temp3"
+								cat ${MASTERCONTROLS}"_temp2" | awk -F"\t" -v PROJECT_ID="${PROJECT_ID}" -v CAPTURE_ID="${CAPTURE_ID}" -v GENOME_VERSION="${GENOME_VERSION}" -v MAIN_ID="${MAIN_ID}" '{if ($1=="yes" && $2==PROJECT_ID && $3==CAPTURE_ID && $4==GENOME_VERSION && $5==MAIN_ID)print}' | sort -u > ${MASTERCONTROLS}"_temp3"
 							fi
 
 							#create hybrid PoN if mixing controls with doublegon for known males (but not if sample 1 is denois by germline only)
