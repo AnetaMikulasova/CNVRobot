@@ -1183,7 +1183,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 
 				#generate list of hdf5 controls from controls master (list, add -I and delet newline \n)
 				if [[ ${CTRL_PON_SEX_SELECT} == "mixed" ]]; then
-					cat ${MASTERCONTROLS}"_temp2" | awk -F"\t" -v PROJECT_ID="${PROJECT_ID}" -v CAPTURE_ID="${CAPTURE_ID}" -v GENOME_VERSION="${GENOME_VERSION}" -v MAIN_ID="${MAIN_ID}" '{if ($1=="yes" && $2==PROJECT_ID && $3==CAPTURE_ID && $4==GENOME_VERSION && $5!=MAIN_ID)print}' > ${MASTERCONTROLS}"_temp3"
+					cat ${MASTERCONTROLS}"_temp2" | awk -F"\t" -v PROJECT_ID="${PROJECT_ID}" -v CAPTURE_ID="${CAPTURE_ID}" -v GENOME_VERSION="${GENOME_VERSION}" -v MAIN_ID="${MAIN_ID}" '{if ($1=="yes" && $2==PROJECT_ID && $3==CAPTURE_ID && $4==GENOME_VERSION && $5!=MAIN_ID)print}' | sort -u > ${MASTERCONTROLS}"_temp3"
 						hdflist=$(awk -F'\t' -v CTRL_COUNT_HDF_DIR="${CTRL_COUNT_HDF_DIR}" '{
 						    if ($7 == "M") {
 						        print CTRL_COUNT_HDF_DIR $5 "_" $6 "_" $7 "_counts_doublegon.hdf5";
@@ -1194,7 +1194,7 @@ cat ${MASTERPROJECTS} | awk -F"\t" '$1=="yes"' | while read -r line || [[ -n "$l
 				fi
 				
 				if [[ ${CTRL_PON_SEX_SELECT} == "M" || ${CTRL_PON_SEX_SELECT} == "F" || ${CTRL_PON_SEX_SELECT} == "matched" ]]; then
-					cat ${MASTERCONTROLS}"_temp2" | awk -F"\t" -v PROJECT_ID="${PROJECT_ID}" -v CAPTURE_ID="${CAPTURE_ID}" -v GENOME_VERSION="${GENOME_VERSION}" -v MAIN_ID="${MAIN_ID}" -v PON_SEX_PATTERN="${PON_SEX_PATTERN}" '{if ($1=="yes" && $2==PROJECT_ID && $3==CAPTURE_ID && $4==GENOME_VERSION && $5!=MAIN_ID && $7==PON_SEX_PATTERN)print}' > ${MASTERCONTROLS}"_temp3"
+					cat ${MASTERCONTROLS}"_temp2" | awk -F"\t" -v PROJECT_ID="${PROJECT_ID}" -v CAPTURE_ID="${CAPTURE_ID}" -v GENOME_VERSION="${GENOME_VERSION}" -v MAIN_ID="${MAIN_ID}" -v PON_SEX_PATTERN="${PON_SEX_PATTERN}" '{if ($1=="yes" && $2==PROJECT_ID && $3==CAPTURE_ID && $4==GENOME_VERSION && $5!=MAIN_ID && $7==PON_SEX_PATTERN)print}' | sort -u > ${MASTERCONTROLS}"_temp3"
 						hdflist=`awk -F'\t' -v CTRL_COUNT_HDF_DIR="${CTRL_COUNT_HDF_DIR}" '{print CTRL_COUNT_HDF_DIR $5 "_" $6 "_" $7 "_counts.hdf5"}' ${MASTERCONTROLS}"_temp3" | sed 's/^/-I /'`
 						hdflist_doublegon=`awk -F'\t' -v CTRL_COUNT_HDF_DIR="${CTRL_COUNT_HDF_DIR}" '{print CTRL_COUNT_HDF_DIR $5 "_" $6 "_" $7 "_counts_doublegon.hdf5"}' ${MASTERCONTROLS}"_temp3" | sed 's/^/-I /'`
 				fi
